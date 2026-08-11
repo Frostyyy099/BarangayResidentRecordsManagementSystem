@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>BRRMS - Barangay Resident Records Management System</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <img src="images/logo.png" alt="BRRMS Logo">
+
+            <div>
+                <h2>BRRMS</h2>
+                <span>Barangay Records System</span>
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <button class="side-link active" data-page="dashboard">
+                <span>▦</span>
+                Dashboard
+            </button>
+
+            <button class="side-link" data-page="residents">
+                <span>♙</span>
+                Residents
+            </button>
+
+            <button class="side-link" data-page="records">
+                <span>▤</span>
+                Records
+            </button>
+
+            <button class="side-link" data-page="reports">
+                <span>▥</span>
+                Reports
+            </button>
+
+        </nav>
+
+
+        <button class="logout-btn" id="logoutBtn">
+            ↪ &nbsp; Log out
+        </button>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="main-content">
+
+
+        <!-- TOP NAVIGATION -->
+
+        <header class="topbar">
+
+            <nav class="top-navigation">
+
+                <button class="top-link active" data-page="dashboard">
+                    ▦ &nbsp; Dashboard
+                </button>
+
+                <button class="top-link" data-page="residents">
+                    ♙ &nbsp; Residents
+                </button>
+
+                <button class="top-link" data-page="records">
+                    ▤ &nbsp; Records
+                </button>
+
+                <button class="top-link" data-page="reports">
+                    ▥ &nbsp; Reports
+                </button>
+
+            </nav>
+
+
+            <div class="staff-profile">
+
+                <div class="notification">
+                    ♧
+                </div>
+
+                <div class="profile-circle">
+                    BS
+                </div>
+
+                <div class="profile-text">
+                    <strong>Barangay Staff</strong>
+                    <small>Administrator</small>
+                </div>
+
+                <span class="arrow">⌄</span>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================= HERO ================= -->
+
+        <section class="hero">
+
+            <div class="hero-overlay"></div>
+
+            <div class="hero-content">
+
+                <div class="greeting">
+                    GOOD MORNING, STAFF!
+                </div>
+
+                <h1>
+                    Barangay Resident<br>
+                    Records Management System
+                </h1>
+
+                <p>
+                    Manage, search, and organize resident records efficiently.<br>
+                    Keep the information accurate, updated, and accessible<br>
+                    for better barangay service.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= DASHBOARD CONTENT ================= -->
+
+        <section class="dashboard-content">
+
+
+            <!-- STATISTICS -->
+
+            <div class="statistics">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon blue">
+                        ♙
+                    </div>
+
+                    <div>
+                        <span>Total Residents</span>
+                        <strong id="totalResidents">0</strong>
+                        <small>All registered records</small>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon green">
+                        ✓
+                    </div>
+
+                    <div>
+                        <span>Active Residents</span>
+                        <strong id="activeResidents">0</strong>
+                        <small>Currently active</small>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon orange">
+                        ▣
+                    </div>
+
+                    <div>
+                        <span>Added This Month</span>
+                        <strong id="monthlyResidents">0</strong>
+                        <small>New registrations</small>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon purple">
+                        ▤
+                    </div>
+
+                    <div>
+                        <span>Total Records</span>
+                        <strong id="totalRecords">0</strong>
+                        <small>All time records</small>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- QUICK ACTIONS -->
+
+            <div class="section-title">
+                <h2>Quick Actions</h2>
+            </div>
+
+
+            <div class="quick-actions">
+
+
+                <button class="action-card add-action">
+
+                    <div class="action-icon blue-icon">
+                        +
+                    </div>
+
+                    <div>
+                        <strong>Add Resident</strong>
+                        <span>Register new<br>resident record</span>
+                    </div>
+
+                    <b>›</b>
+
+                </button>
+
+
+                <button class="action-card search-action">
+
+                    <div class="action-icon green-icon">
+                        ⌕
+                    </div>
+
+                    <div>
+                        <strong>Search Records</strong>
+                        <span>Find resident<br>information</span>
+                    </div>
+
+                    <b>›</b>
+
+                </button>
+
+
+                <button class="action-card update-action">
+
+                    <div class="action-icon orange-icon">
+                        ✎
+                    </div>
+
+                    <div>
+                        <strong>Update Information</strong>
+                        <span>Edit and update<br>resident details</span>
+                    </div>
+
+                    <b>›</b>
+
+                </button>
+
+
+                <button class="action-card report-action">
+
+                    <div class="action-icon purple-icon">
+                        ▥
+                    </div>
+
+                    <div>
+                        <strong>View Reports</strong>
+                        <span>Generate reports<br>and statistics</span>
+                    </div>
+
+                    <b>›</b>
+
+                </button>
+
+            </div>
+
+
+            <!-- RECENT RESIDENTS -->
+
+            <div class="recent-header">
+
+                <h2>Recently Added Residents</h2>
+
+                <button id="viewAllBtn">
+                    View all residents →
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>ID</th>
+                            <th>Resident Name</th>
+                            <th>Age</th>
+                            <th>Address</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Date Added</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="residentTable">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= MODAL ================= -->
+
+    <div class="modal" id="residentModal">
+
+        <div class="modal-box">
+
+            <button class="close-btn" id="closeModal">
+                ×
+            </button>
+
+            <h2 id="modalTitle">
+                Add Resident
+            </h2>
+
+            <p>
+                Enter the resident's information below.
+            </p>
+
+
+            <form id="residentForm">
+
+                <input type="hidden" id="editId">
+
+
+                <div class="form-group">
+
+                    <label>Full Name</label>
+
+                    <input
+                        type="text"
+                        id="residentName"
+                        placeholder="Juan Dela Cruz"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>Age</label>
+
+                        <input
+                            type="number"
+                            id="residentAge"
+                            placeholder="25"
+                            min="1"
+                            max="120"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Contact Number</label>
+
+                        <input
+                            type="text"
+                            id="residentContact"
+                            placeholder="0912 345 6789"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Address</label>
+
+                    <input
+                        type="text"
+                        id="residentAddress"
+                        placeholder="Purok 3, Barangay, General Santos City"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Status</label>
+
+                    <select id="residentStatus">
+
+                        <option value="Active">
+                            Active
+                        </option>
+
+                        <option value="Inactive">
+                            Inactive
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                >
+                    Save Resident
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- SEARCH MODAL -->
+
+    <div class="modal" id="searchModal">
+
+        <div class="modal-box search-box">
+
+            <button class="close-btn" id="closeSearch">
+                ×
+            </button>
+
+            <h2>Search Resident</h2>
+
+            <p>Search by name, address, or contact number.</p>
+
+            <input
+                type="text"
+                id="searchInput"
+                class="search-input"
+                placeholder="Type resident name..."
+            >
+
+            <div id="searchResults"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script src="js/script.js"></script>
+
+</body>
+
+</html>
