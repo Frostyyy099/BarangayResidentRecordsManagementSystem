@@ -748,6 +748,15 @@ body {
 
 
 /* =========================
+   ADDITIONAL TABLE SECTIONS
+   ========================= */
+
+.additional-table-section {
+    margin-top: 25px;
+}
+
+
+/* =========================
    TABLE
    ========================= */
 
@@ -760,6 +769,8 @@ body {
 
     box-shadow:
         0 5px 18px rgba(20,54,91,0.06);
+
+    width: 100%;
 }
 
 
@@ -808,6 +819,11 @@ tbody tr:hover {
 }
 
 
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
 .status {
     display: inline-block;
 
@@ -822,6 +838,26 @@ tbody tr:hover {
     font-weight: 700;
 
     font-size: 7px;
+}
+
+
+/* Additional status styles */
+
+.completed-status {
+    background: #d8f6e5;
+    color: #14975d;
+}
+
+
+.pending-status {
+    background: #fff0d9;
+    color: #d98600;
+}
+
+
+.processing-status {
+    background: #e4efff;
+    color: #2563eb;
 }
 
 
@@ -1088,61 +1124,75 @@ tbody tr:hover {
         width: 70px;
     }
 
+
     .brand {
         justify-content: center;
         padding: 10px;
     }
 
+
     .brand img {
         margin: 0;
     }
 
+
     .brand div {
         display: none;
     }
+
 
     .side-link {
         justify-content: center;
         padding: 14px 5px;
     }
 
+
     .side-link span {
         margin: 0;
     }
+
 
     .side-link {
         font-size: 0;
     }
 
+
     .side-link span {
         font-size: 18px;
     }
+
 
     .logout-btn {
         font-size: 0;
         text-align: center;
     }
 
+
     .main-content {
         margin-left: 70px;
     }
+
 
     .topbar {
         left: 70px;
         padding: 0 15px;
     }
 
+
     .top-navigation {
         display: none;
     }
+
 
     .profile-text {
         display: none;
     }
 
+
     .hero-content {
         padding-left: 25px;
     }
+
 
     .dashboard-content {
         padding: 0 15px 30px;
@@ -1158,21 +1208,26 @@ tbody tr:hover {
         grid-template-columns: 1fr;
     }
 
+
     .hero {
         height: 350px;
     }
+
 
     .hero h1 {
         font-size: 26px;
     }
 
+
     .form-row {
         grid-template-columns: 1fr;
     }
 
+
     .table-container {
         overflow-x: auto;
     }
+
 
     table {
         min-width: 800px;
