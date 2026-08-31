@@ -333,6 +333,9 @@
                 <div class="recent-header">
 
                     <h2>Barangay Officials</h2>
+                    <button type="button" class="table-action-btn" id="addOfficialBtn">
+                        + Add Official
+                    </button>
 
                 </div>
 
@@ -353,7 +356,7 @@
 
                         </thead>
 
-                        <tbody>
+                        <tbody id="officialTable">
 
                             <tr>
                                 <td>OFF-001</td>
@@ -509,6 +512,9 @@
                 <div class="recent-header">
 
                     <h2>Barangay Certificates</h2>
+                    <button type="button" class="table-action-btn" id="addCertificateBtn">
+                        + Add Certificate
+                    </button>
 
                 </div>
 
@@ -529,7 +535,7 @@
 
                         </thead>
 
-                        <tbody>
+                        <tbody id="certificateTable">
 
                             <tr>
                                 <td>CERT-001</td>
@@ -588,121 +594,117 @@
     <!-- ================= MODAL ================= -->
 
     <div class="modal" id="residentModal">
-
         <div class="modal-box">
-
-            <button class="close-btn" id="closeModal">
-                ×
-            </button>
-
-            <h2 id="modalTitle">
-                Add Resident
-            </h2>
-
-            <p>
-                Enter the resident's information below.
-            </p>
-
-
+            <button type="button" class="close-btn" id="closeModal">×</button>
+            <h2 id="modalTitle">Add Resident</h2>
+            <p>Enter the resident's information below.</p>
             <form id="residentForm">
-
-                <input type="hidden" id="editId">
-
-
+                <input type="hidden" id="editId" name="editId">
                 <div class="form-group">
-
-                    <label>Full Name</label>
-
-                    <input
-                        type="text"
-                        id="residentName"
-                        placeholder="Juan Dela Cruz"
-                        required
-                    >
-
+                    <label for="residentName">Full Name</label>
+                    <input type="text" id="residentName" name="full_name" placeholder="Juan Dela Cruz" required>
                 </div>
-
-
                 <div class="form-row">
-
                     <div class="form-group">
-
-                        <label>Age</label>
-
-                        <input
-                            type="number"
-                            id="residentAge"
-                            placeholder="25"
-                            min="1"
-                            max="120"
-                            required
-                        >
-
+                        <label for="residentAge">Age</label>
+                        <input type="number" id="residentAge" name="age" placeholder="25" min="1" max="120" required>
                     </div>
-
-
                     <div class="form-group">
-
-                        <label>Contact Number</label>
-
-                        <input
-                            type="text"
-                            id="residentContact"
-                            placeholder="0912 345 6789"
-                            required
-                        >
-
+                        <label for="residentContact">Contact Number</label>
+                        <input type="tel" id="residentContact" name="contact" placeholder="0912 345 6789" pattern="[0-9+\-\s]{10,20}" required>
                     </div>
-
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>Address</label>
-
-                    <input
-                        type="text"
-                        id="residentAddress"
-                        placeholder="Purok 3, Barangay, General Santos City"
-                        required
-                    >
-
+                    <label for="residentAddress">Address</label>
+                    <input type="text" id="residentAddress" name="address" placeholder="Purok 3, Barangay, General Santos City" required>
                 </div>
-
-
                 <div class="form-group">
-
-                    <label>Status</label>
-
-                    <select id="residentStatus">
-
-                        <option value="Active">
-                            Active
-                        </option>
-
-                        <option value="Inactive">
-                            Inactive
-                        </option>
-
+                    <label for="residentStatus">Status</label>
+                    <select id="residentStatus" name="status" required>
+                        <option value="">Select Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
                     </select>
-
                 </div>
-
-
-                <button
-                    type="submit"
-                    class="save-btn"
-                >
-                    Save Resident
-                </button>
-
+                <button type="submit" class="save-btn">Save Resident</button>
             </form>
-
         </div>
-
     </div>
 
+    <!-- ================= TASK 5: ADD OFFICIAL MODAL ================= -->
+    <div class="modal" id="officialModal">
+        <div class="modal-box">
+            <button type="button" class="close-btn" id="closeOfficial">×</button>
+            <h2>Add Barangay Official</h2>
+            <p>Enter the official's information below.</p>
+            <form id="officialForm">
+                <div class="form-group">
+                    <label for="officialCode">Official Code</label>
+                    <input type="text" id="officialCode" name="official_code" placeholder="OFF-006" required>
+                </div>
+                <div class="form-group">
+                    <label for="officialName">Name</label>
+                    <input type="text" id="officialName" name="name" placeholder="Juan Dela Cruz" minlength="3" required>
+                </div>
+                <div class="form-group">
+                    <label for="officialPosition">Position</label>
+                    <select id="officialPosition" name="position" required>
+                        <option value="">Select Position</option>
+                        <option>Barangay Captain</option>
+                        <option>Kagawad</option>
+                        <option>Secretary</option>
+                        <option>Treasurer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="officialContact">Contact Number</label>
+                    <input type="tel" id="officialContact" name="contact_number" placeholder="09123456789" pattern="09[0-9]{9}" title="Enter an 11-digit Philippine mobile number starting with 09" required>
+                </div>
+                <div class="form-group">
+                    <label for="officialTerm">Term</label>
+                    <input type="text" id="officialTerm" name="term" placeholder="2026-2029" pattern="[0-9]{4}-[0-9]{4}" title="Use the format YYYY-YYYY" required>
+                </div>
+                <button type="submit" class="save-btn">Add Official</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= TASK 5: ADD CERTIFICATE MODAL ================= -->
+    <div class="modal" id="certificateModal">
+        <div class="modal-box">
+            <button type="button" class="close-btn" id="closeCertificate">×</button>
+            <h2>Add Barangay Certificate</h2>
+            <p>Enter the certificate information below.</p>
+            <form id="certificateForm">
+                <div class="form-group">
+                    <label for="certificateCode">Certificate Code</label>
+                    <input type="text" id="certificateCode" name="certificate_code" placeholder="CERT-006" required>
+                </div>
+                <div class="form-group">
+                    <label for="certificateResident">Resident Name</label>
+                    <input type="text" id="certificateResident" name="resident_name" placeholder="Juan Dela Cruz" minlength="3" required>
+                </div>
+                <div class="form-group">
+                    <label for="certificateType">Certificate Type</label>
+                    <select id="certificateType" name="certificate_type" required>
+                        <option value="">Select Certificate</option>
+                        <option>Certificate of Residency</option>
+                        <option>Barangay Clearance</option>
+                        <option>Certificate of Indigency</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="certificateDate">Date Issued</label>
+                    <input type="date" id="certificateDate" name="date_issued" required>
+                </div>
+                <div class="form-group">
+                    <label for="certificatePurpose">Purpose</label>
+                    <textarea id="certificatePurpose" name="purpose" placeholder="Enter purpose" minlength="3" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="save-btn">Add Certificate</button>
+            </form>
+        </div>
+    </div>
 
     <!-- ================= SEARCH MODAL ================= -->
 

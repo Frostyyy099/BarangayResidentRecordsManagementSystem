@@ -1,7 +1,6 @@
 /* =========================================
    BRRMS JAVASCRIPT
-   No database
-   Uses browser localStorage
+   Task 5 Interactive Forms
    ========================================= */
 
 
@@ -43,7 +42,7 @@ const totalRecords =
 
 
 /* =========================
-   SAVE DATA
+   SAVE RESIDENT DATA
    ========================= */
 
 function saveData() {
@@ -57,7 +56,7 @@ function saveData() {
 
 
 /* =========================
-   GENERATE ID
+   GENERATE RESIDENT ID
    ========================= */
 
 function generateID() {
@@ -126,7 +125,7 @@ function updateDashboard() {
 
 
 /* =========================
-   RENDER TABLE
+   RENDER RESIDENT TABLE
    ========================= */
 
 function renderTable() {
@@ -147,10 +146,6 @@ function renderTable() {
         return;
     }
 
-
-    /*
-       Show newest residents first
-    */
 
     const recentResidents =
         [...residents]
@@ -199,7 +194,7 @@ function renderTable() {
 
 
 /* =========================
-   OPEN ADD MODAL
+   OPEN ADD RESIDENT MODAL
    ========================= */
 
 function openAddModal() {
@@ -217,7 +212,7 @@ function openAddModal() {
 
 
 /* =========================
-   CLOSE MODAL
+   CLOSE RESIDENT MODAL
    ========================= */
 
 function closeResidentModal() {
@@ -236,6 +231,15 @@ residentForm.addEventListener(
     function(event) {
 
         event.preventDefault();
+
+
+        if (!residentForm.checkValidity()) {
+
+            residentForm.reportValidity();
+
+            return;
+
+        }
 
 
         const name =
@@ -288,9 +292,13 @@ residentForm.addEventListener(
             if (resident) {
 
                 resident.name = name;
+
                 resident.age = age;
+
                 resident.address = address;
+
                 resident.contact = contact;
+
                 resident.status = status;
 
             }
@@ -342,6 +350,7 @@ residentForm.addEventListener(
         updateDashboard();
 
         closeResidentModal();
+
 
         alert(
             editId
@@ -428,10 +437,15 @@ document
 
                 container.innerHTML = `
                     <div class="search-result">
-                        <strong>No resident found</strong>
+
+                        <strong>
+                            No resident found
+                        </strong>
+
                         <span>
                             Try another name or keyword.
                         </span>
+
                     </div>
                 `;
 
@@ -457,11 +471,17 @@ document
                     </strong>
 
                     <span>
+
                         ID: ${resident.id}<br>
+
                         Age: ${resident.age}<br>
+
                         Address: ${resident.address}<br>
+
                         Contact: ${resident.contact}<br>
+
                         Status: ${resident.status}
+
                     </span>
 
                 `;
@@ -499,7 +519,9 @@ function updateResident() {
 
 
     if (!name) {
+
         return;
+
     }
 
 
@@ -715,11 +737,6 @@ navigationButtons.forEach(
                     this.dataset.page;
 
 
-                /*
-                    Make all navigation
-                    buttons inactive
-                */
-
                 document
                     .querySelectorAll(
                         ".side-link, .top-link"
@@ -735,11 +752,6 @@ navigationButtons.forEach(
                     );
 
 
-                /*
-                    Activate matching
-                    navigation buttons
-                */
-
                 document
                     .querySelectorAll(
                         `[data-page="${page}"]`
@@ -754,10 +766,6 @@ navigationButtons.forEach(
                         }
                     );
 
-
-                /* =================
-                   PAGE ACTIONS
-                   ================= */
 
                 if (page === "residents") {
 
@@ -831,6 +839,442 @@ document
 
         }
     );
+
+
+/* =========================================================
+   TASK 5 - FORM 1
+   ADD BARANGAY OFFICIAL
+   Corresponds to barangay_officials table
+   ========================================================= */
+
+const officialModal =
+    document.getElementById("officialModal");
+
+const officialForm =
+    document.getElementById("officialForm");
+
+const addOfficialBtn =
+    document.getElementById("addOfficialBtn");
+
+const closeOfficial =
+    document.getElementById("closeOfficial");
+
+const officialTable =
+    document.getElementById("officialTable");
+
+
+if (
+    officialModal &&
+    officialForm &&
+    addOfficialBtn &&
+    closeOfficial &&
+    officialTable
+) {
+
+
+    /* OPEN FORM */
+
+    addOfficialBtn.addEventListener(
+        "click",
+        function() {
+
+            officialForm.reset();
+
+            officialModal.classList.add("show");
+
+        }
+    );
+
+
+    /* CLOSE FORM */
+
+    closeOfficial.addEventListener(
+        "click",
+        function() {
+
+            officialModal.classList.remove("show");
+
+        }
+    );
+
+
+    /* CLICK OUTSIDE */
+
+    officialModal.addEventListener(
+        "click",
+        function(event) {
+
+            if (
+                event.target === officialModal
+            ) {
+
+                officialModal.classList.remove(
+                    "show"
+                );
+
+            }
+
+        }
+    );
+
+
+    /* SUBMIT FORM */
+
+    officialForm.addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+
+            /* HTML5 VALIDATION */
+
+            if (!officialForm.checkValidity()) {
+
+                officialForm.reportValidity();
+
+                return;
+
+            }
+
+
+            const code =
+                document
+                    .getElementById(
+                        "officialCode"
+                    )
+                    .value
+                    .trim();
+
+
+            const name =
+                document
+                    .getElementById(
+                        "officialName"
+                    )
+                    .value
+                    .trim();
+
+
+            const position =
+                document
+                    .getElementById(
+                        "officialPosition"
+                    )
+                    .value;
+
+
+            const contact =
+                document
+                    .getElementById(
+                        "officialContact"
+                    )
+                    .value
+                    .trim();
+
+
+            const term =
+                document
+                    .getElementById(
+                        "officialTerm"
+                    )
+                    .value
+                    .trim();
+
+
+            /* CREATE TABLE ROW */
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td>${code}</td>
+
+                <td>${name}</td>
+
+                <td>${position}</td>
+
+                <td>${contact}</td>
+
+                <td>${term}</td>
+
+            `;
+
+
+            officialTable.appendChild(row);
+
+
+            /* RESET */
+
+            officialForm.reset();
+
+
+            officialModal.classList.remove(
+                "show"
+            );
+
+
+            alert(
+                "Barangay official successfully added!"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   TASK 5 - FORM 2
+   ADD BARANGAY CERTIFICATE
+   Corresponds to certificates table
+   ========================================================= */
+
+const certificateModal =
+    document.getElementById(
+        "certificateModal"
+    );
+
+const certificateForm =
+    document.getElementById(
+        "certificateForm"
+    );
+
+const addCertificateBtn =
+    document.getElementById(
+        "addCertificateBtn"
+    );
+
+const closeCertificate =
+    document.getElementById(
+        "closeCertificate"
+    );
+
+const certificateTable =
+    document.getElementById(
+        "certificateTable"
+    );
+
+
+if (
+    certificateModal &&
+    certificateForm &&
+    addCertificateBtn &&
+    closeCertificate &&
+    certificateTable
+) {
+
+
+    /* OPEN FORM */
+
+    addCertificateBtn.addEventListener(
+        "click",
+        function() {
+
+            certificateForm.reset();
+
+            certificateModal.classList.add(
+                "show"
+            );
+
+        }
+    );
+
+
+    /* CLOSE FORM */
+
+    closeCertificate.addEventListener(
+        "click",
+        function() {
+
+            certificateModal.classList.remove(
+                "show"
+            );
+
+        }
+    );
+
+
+    /* CLICK OUTSIDE */
+
+    certificateModal.addEventListener(
+        "click",
+        function(event) {
+
+            if (
+                event.target === certificateModal
+            ) {
+
+                certificateModal.classList.remove(
+                    "show"
+                );
+
+            }
+
+        }
+    );
+
+
+    /* SUBMIT FORM */
+
+    certificateForm.addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+
+            /* HTML5 VALIDATION */
+
+            if (
+                !certificateForm.checkValidity()
+            ) {
+
+                certificateForm.reportValidity();
+
+                return;
+
+            }
+
+
+            const code =
+                document
+                    .getElementById(
+                        "certificateCode"
+                    )
+                    .value
+                    .trim();
+
+
+            const resident =
+                document
+                    .getElementById(
+                        "certificateResident"
+                    )
+                    .value
+                    .trim();
+
+
+            const type =
+                document
+                    .getElementById(
+                        "certificateType"
+                    )
+                    .value;
+
+
+            const date =
+                document
+                    .getElementById(
+                        "certificateDate"
+                    )
+                    .value;
+
+
+            const purpose =
+                document
+                    .getElementById(
+                        "certificatePurpose"
+                    )
+                    .value
+                    .trim();
+
+
+            /* FORMAT DATE */
+
+            const formattedDate =
+                new Date(
+                    date + "T00:00:00"
+                ).toLocaleDateString(
+                    "en-US",
+                    {
+                        month: "short",
+                        day: "2-digit",
+                        year: "numeric"
+                    }
+                );
+
+
+            /* CREATE TABLE ROW */
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td>${code}</td>
+
+                <td>${resident}</td>
+
+                <td>${type}</td>
+
+                <td>${formattedDate}</td>
+
+                <td>${purpose}</td>
+
+            `;
+
+
+            certificateTable.appendChild(row);
+
+
+            /* RESET FORM */
+
+            certificateForm.reset();
+
+
+            certificateModal.classList.remove(
+                "show"
+            );
+
+
+            alert(
+                "Certificate successfully added!"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   TASK 5 - ESCAPE KEY
+   ========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key !== "Escape") {
+
+            return;
+
+        }
+
+
+        if (officialModal) {
+
+            officialModal.classList.remove(
+                "show"
+            );
+
+        }
+
+
+        if (certificateModal) {
+
+            certificateModal.classList.remove(
+                "show"
+            );
+
+        }
+
+    }
+);
 
 
 /* =========================

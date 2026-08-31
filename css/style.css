@@ -1234,3 +1234,29 @@ tbody tr:last-child td {
     }
 
 }
+
+/* =========================================
+   TASK 5 - INTERACTIVE TABLE BUTTONS
+   ========================================= */
+.table-action-btn {
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 8px 13px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+.table-action-btn:hover { background: #1d55cc; transform: translateY(-1px); }
+.modal-box textarea {
+    width: 100%; border: 1px solid #dce3eb; border-radius: 8px; padding: 11px;
+    font-family: inherit; font-size: 11px; outline: none; resize: vertical;
+}
+.modal-box textarea:focus { border-color: #2870ed; box-shadow: 0 0 0 3px rgba(40,112,237,0.1); }
+@media (max-width: 600px) {
+    .recent-header { align-items: flex-start; flex-direction: column; gap: 8px; }
+    .table-action-btn { width: 100%; }
+}
