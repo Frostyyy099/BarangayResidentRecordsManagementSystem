@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>BRRMS - Login</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/stylee.css">
 </head>
 
 <body>
@@ -16,8 +15,9 @@
 
         <div class="auth-card">
 
+            <!-- LOGO -->
             <div class="auth-logo">
-                <img src="images/logo.png" alt="BRRMS Logo">
+                <img src="images/logo.png" alt="BRRMS">
             </div>
 
             <h1>Welcome to BRRMS</h1>
@@ -28,49 +28,119 @@
 
             <h2>Login</h2>
 
-            <form id="loginForm">
+            <form id="loginForm" novalidate>
 
+                <!-- USERNAME / EMAIL -->
                 <div class="form-group">
-                    <label for="username">Username</label>
+
+                    <label for="username">
+                        Username / Email
+                    </label>
 
                     <input
                         type="text"
                         id="username"
-                        placeholder="Enter your username"
+                        name="username"
+                        placeholder="Enter your username or email"
                         required
+                        minlength="3"
+                        maxlength="100"
                     >
+
+                    <small
+                        class="error-message"
+                        id="usernameError">
+                    </small>
+
                 </div>
 
+
+                <!-- PASSWORD -->
                 <div class="form-group">
-                    <label for="password">Password</label>
+
+                    <label for="password">
+                        Password
+                    </label>
 
                     <input
                         type="password"
                         id="password"
+                        name="password"
                         placeholder="Enter your password"
                         required
+                        minlength="8"
                     >
+
+                    <small
+                        class="error-message"
+                        id="passwordError">
+                    </small>
+
                 </div>
 
-                <button type="submit" class="auth-btn">
+
+                <!-- MFA CODE -->
+                <div class="form-group">
+
+                    <label for="mfaCode">
+                        MFA Code
+                    </label>
+
+                    <input
+                        type="text"
+                        id="mfaCode"
+                        name="mfaCode"
+                        placeholder="Enter 6-digit MFA code"
+                        required
+                        minlength="6"
+                        maxlength="6"
+                        pattern="[0-9]{6}"
+                        inputmode="numeric"
+                    >
+
+                    <small
+                        class="error-message"
+                        id="mfaError">
+                    </small>
+
+                </div>
+
+
+                <!-- LOGIN BUTTON -->
+                <button
+                    type="submit"
+                    class="auth-btn">
                     Login
                 </button>
 
-                <p id="loginMessage" class="auth-message"></p>
+
+                <!-- LOGIN MESSAGE -->
+                <p
+                    id="loginMessage"
+                    class="auth-message">
+                </p>
 
             </form>
 
+
+            <!-- SIGN UP LINK -->
             <p class="auth-switch">
+
                 Don't have an account?
-                <a href="signup.html">Sign Up</a>
+
+                <a href="signup.html">
+                    Sign Up
+                </a>
+
             </p>
 
         </div>
 
     </div>
 
+
+    <!-- LOGIN JAVASCRIPT -->
     <script src="js/login.js"></script>
 
 </body>
-
 </html>

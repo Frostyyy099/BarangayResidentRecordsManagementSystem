@@ -1,745 +1,796 @@
-<!DOCTYPE html>
-<html lang="en">
+    <!DOCTYPE html>
+    <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>BRRMS - Barangay Resident Records Management System</title>
+        <title>BRRMS - Barangay Resident Records Management System</title>
 
-    <link rel="stylesheet" href="css/style.css">
-</head>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
 
-<body>
+    <body>
 
-    <!-- ================= SIDEBAR ================= -->
+        <!-- ================= SIDEBAR ================= -->
 
-    <aside class="sidebar">
+        <aside class="sidebar">
 
-        <div class="brand">
+            <div class="brand">
 
-            <img src="images/logo.png" alt="BRRMS Logo">
+                <img src="images/logo.png" alt="BRRMS Logo">
 
-            <div>
-                <h2>BRRMS</h2>
-                <span>Barangay Records System</span>
+                <div>
+                    <h2>BRRMS</h2>
+                    <span>Barangay Records System</span>
+                </div>
+
             </div>
 
-        </div>
 
+            <nav class="sidebar-nav">
 
-        <nav class="sidebar-nav">
-
-            <button class="side-link active" data-page="dashboard">
-                <span>▦</span>
-                Dashboard
-            </button>
-
-            <button class="side-link" data-page="residents">
-                <span>♙</span>
-                Residents
-            </button>
-
-            <button class="side-link" data-page="records">
-                <span>▤</span>
-                Records
-            </button>
-
-            <button class="side-link" data-page="reports">
-                <span>▥</span>
-                Reports
-            </button>
-
-        </nav>
-
-
-        <button class="logout-btn" id="logoutBtn">
-            ↪ &nbsp; Log out
-        </button>
-
-    </aside>
-
-
-    <!-- ================= MAIN ================= -->
-
-    <main class="main-content">
-
-
-        <!-- TOP NAVIGATION -->
-
-        <header class="topbar">
-
-            <nav class="top-navigation">
-
-                <button class="top-link active" data-page="dashboard">
-                    ▦ &nbsp; Dashboard
+                <button class="side-link active" data-page="dashboard">
+                    <span>▦</span>
+                    Dashboard
                 </button>
 
-                <button class="top-link" data-page="residents">
-                    ♙ &nbsp; Residents
+                <button class="side-link" data-page="residents">
+                    <span>♙</span>
+                    Residents
                 </button>
 
-                <button class="top-link" data-page="records">
-                    ▤ &nbsp; Records
+                <button class="side-link" data-page="records">
+                    <span>▤</span>
+                    Records
                 </button>
 
-                <button class="top-link" data-page="reports">
-                    ▥ &nbsp; Reports
+                <button class="side-link" data-page="reports">
+                    <span>▥</span>
+                    Reports
                 </button>
 
             </nav>
 
 
-            <div class="staff-profile">
-
-                <div class="notification">
-                    ♧
-                </div>
-
-                <div class="profile-circle">
-                    BS
-                </div>
-
-                <div class="profile-text">
-                    <strong>Barangay Staff</strong>
-                    <small>Administrator</small>
-                </div>
-
-                <span class="arrow">⌄</span>
-
-            </div>
-
-        </header>
-
-
-        <!-- ================= HERO ================= -->
-
-        <section class="hero">
-
-            <div class="hero-overlay"></div>
-
-            <div class="hero-content">
-
-                <div class="greeting">
-                    GOOD MORNING, STAFF!
-                </div>
-
-                <h1>
-                    Barangay Resident<br>
-                    Records Management System
-                </h1>
-
-                <p>
-                    Manage, search, and organize resident records efficiently.<br>
-                    Keep the information accurate, updated, and accessible<br>
-                    for better barangay service.
-                </p>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= DASHBOARD CONTENT ================= -->
-
-        <section class="dashboard-content">
-
-
-            <!-- STATISTICS -->
-
-            <div class="statistics">
-
-                <div class="stat-card">
-
-                    <div class="stat-icon blue">
-                        ♙
-                    </div>
-
-                    <div>
-                        <span>Total Residents</span>
-                        <strong id="totalResidents">0</strong>
-                        <small>All registered records</small>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-icon green">
-                        ✓
-                    </div>
-
-                    <div>
-                        <span>Active Residents</span>
-                        <strong id="activeResidents">0</strong>
-                        <small>Currently active</small>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-icon orange">
-                        ▣
-                    </div>
-
-                    <div>
-                        <span>Added This Month</span>
-                        <strong id="monthlyResidents">0</strong>
-                        <small>New registrations</small>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-icon purple">
-                        ▤
-                    </div>
-
-                    <div>
-                        <span>Total Records</span>
-                        <strong id="totalRecords">0</strong>
-                        <small>All time records</small>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- QUICK ACTIONS -->
-
-            <div class="section-title">
-                <h2>Quick Actions</h2>
-            </div>
-
-
-            <div class="quick-actions">
-
-
-                <button class="action-card add-action">
-
-                    <div class="action-icon blue-icon">
-                        +
-                    </div>
-
-                    <div>
-                        <strong>Add Resident</strong>
-                        <span>Register new<br>resident record</span>
-                    </div>
-
-                    <b>›</b>
-
-                </button>
-
-
-                <button class="action-card search-action">
-
-                    <div class="action-icon green-icon">
-                        ⌕
-                    </div>
-
-                    <div>
-                        <strong>Search Records</strong>
-                        <span>Find resident<br>information</span>
-                    </div>
-
-                    <b>›</b>
-
-                </button>
-
-
-                <button class="action-card update-action">
-
-                    <div class="action-icon orange-icon">
-                        ✎
-                    </div>
-
-                    <div>
-                        <strong>Update Information</strong>
-                        <span>Edit and update<br>resident details</span>
-                    </div>
-
-                    <b>›</b>
-
-                </button>
-
-
-                <button class="action-card report-action">
-
-                    <div class="action-icon purple-icon">
-                        ▥
-                    </div>
-
-                    <div>
-                        <strong>View Reports</strong>
-                        <span>Generate reports<br>and statistics</span>
-                    </div>
-
-                    <b>›</b>
-
-                </button>
-
-            </div>
-
-
-            <!-- ================= RECENT RESIDENTS ================= -->
-
-            <div class="recent-header">
-
-                <h2>Recently Added Residents</h2>
-
-                <button id="viewAllBtn">
-                    View all residents →
-                </button>
-
-            </div>
-
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-                            <th>ID</th>
-                            <th>Resident Name</th>
-                            <th>Age</th>
-                            <th>Address</th>
-                            <th>Contact</th>
-                            <th>Status</th>
-                            <th>Date Added</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="residentTable">
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-            <!-- ================= BARANGAY OFFICIALS ================= -->
-
-            <div class="additional-table-section">
-
-                <div class="recent-header">
-
-                    <h2>Barangay Officials</h2>
-                    <button type="button" class="table-action-btn" id="addOfficialBtn">
-                        + Add Official
-                    </button>
-
-                </div>
-
-
-                <div class="table-container">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-                                <th>Official ID</th>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Contact Number</th>
-                                <th>Term</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="officialTable">
-
-                            <tr>
-                                <td>OFF-001</td>
-                                <td>Roberto Santos</td>
-                                <td>Barangay Captain</td>
-                                <td>0917-123-4567</td>
-                                <td>2023–2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>OFF-002</td>
-                                <td>Elena Cruz</td>
-                                <td>Kagawad</td>
-                                <td>0918-234-5678</td>
-                                <td>2023–2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>OFF-003</td>
-                                <td>Mark Reyes</td>
-                                <td>Kagawad</td>
-                                <td>0919-345-6789</td>
-                                <td>2023–2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>OFF-004</td>
-                                <td>Linda Garcia</td>
-                                <td>Secretary</td>
-                                <td>0920-456-7890</td>
-                                <td>2023–2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>OFF-005</td>
-                                <td>Joseph Dela Cruz</td>
-                                <td>Treasurer</td>
-                                <td>0921-567-8901</td>
-                                <td>2023–2026</td>
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-
-            <!-- ================= DOCUMENT REQUESTS ================= -->
-
-            <div class="additional-table-section">
-
-                <div class="recent-header">
-
-                    <h2>Barangay Document Requests</h2>
-
-                </div>
-
-
-                <div class="table-container">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-                                <th>Request ID</th>
-                                <th>Resident Name</th>
-                                <th>Document Type</th>
-                                <th>Date Requested</th>
-                                <th>Status</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            <tr>
-                                <td>REQ-001</td>
-                                <td>Juan Dela Cruz</td>
-                                <td>Barangay Clearance</td>
-                                <td>Aug. 18, 2026</td>
-                                <td>
-                                    <span class="status completed-status">
-                                        Completed
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>REQ-002</td>
-                                <td>Maria Santos</td>
-                                <td>Certificate of Residency</td>
-                                <td>Aug. 18, 2026</td>
-                                <td>
-                                    <span class="status pending-status">
-                                        Pending
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>REQ-003</td>
-                                <td>Pedro Garcia</td>
-                                <td>Barangay Indigency</td>
-                                <td>Aug. 19, 2026</td>
-                                <td>
-                                    <span class="status completed-status">
-                                        Completed
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>REQ-004</td>
-                                <td>Ana Reyes</td>
-                                <td>Barangay Clearance</td>
-                                <td>Aug. 19, 2026</td>
-                                <td>
-                                    <span class="status processing-status">
-                                        Processing
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>REQ-005</td>
-                                <td>Carlo Mendoza</td>
-                                <td>Certificate of Residency</td>
-                                <td>Aug. 20, 2026</td>
-                                <td>
-                                    <span class="status pending-status">
-                                        Pending
-                                    </span>
-                                </td>
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-
-            <!-- ================= BARANGAY CERTIFICATES ================= -->
-
-            <div class="additional-table-section">
-
-                <div class="recent-header">
-
-                    <h2>Barangay Certificates</h2>
-                    <button type="button" class="table-action-btn" id="addCertificateBtn">
-                        + Add Certificate
-                    </button>
-
-                </div>
-
-
-                <div class="table-container">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-                                <th>Certificate ID</th>
-                                <th>Resident Name</th>
-                                <th>Certificate Type</th>
-                                <th>Date Issued</th>
-                                <th>Purpose</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="certificateTable">
-
-                            <tr>
-                                <td>CERT-001</td>
-                                <td>Juan Dela Cruz</td>
-                                <td>Certificate of Residency</td>
-                                <td>Aug. 15, 2026</td>
-                                <td>Employment</td>
-                            </tr>
-
-                            <tr>
-                                <td>CERT-002</td>
-                                <td>Maria Santos</td>
-                                <td>Barangay Clearance</td>
-                                <td>Aug. 16, 2026</td>
-                                <td>Employment</td>
-                            </tr>
-
-                            <tr>
-                                <td>CERT-003</td>
-                                <td>Pedro Garcia</td>
-                                <td>Certificate of Indigency</td>
-                                <td>Aug. 17, 2026</td>
-                                <td>Financial Assistance</td>
-                            </tr>
-
-                            <tr>
-                                <td>CERT-004</td>
-                                <td>Ana Reyes</td>
-                                <td>Certificate of Residency</td>
-                                <td>Aug. 18, 2026</td>
-                                <td>School Requirement</td>
-                            </tr>
-
-                            <tr>
-                                <td>CERT-005</td>
-                                <td>Carlo Mendoza</td>
-                                <td>Barangay Clearance</td>
-                                <td>Aug. 19, 2026</td>
-                                <td>Business Requirement</td>
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-
-        </section>
-
-    </main>
-
-
-    <!-- ================= MODAL ================= -->
-
-    <div class="modal" id="residentModal">
-        <div class="modal-box">
-            <button type="button" class="close-btn" id="closeModal">×</button>
-            <h2 id="modalTitle">Add Resident</h2>
-            <p>Enter the resident's information below.</p>
-            <form id="residentForm">
-                <input type="hidden" id="editId" name="editId">
-                <div class="form-group">
-                    <label for="residentName">Full Name</label>
-                    <input type="text" id="residentName" name="full_name" placeholder="Juan Dela Cruz" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="residentAge">Age</label>
-                        <input type="number" id="residentAge" name="age" placeholder="25" min="1" max="120" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="residentContact">Contact Number</label>
-                        <input type="tel" id="residentContact" name="contact" placeholder="0912 345 6789" pattern="[0-9+\-\s]{10,20}" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="residentAddress">Address</label>
-                    <input type="text" id="residentAddress" name="address" placeholder="Purok 3, Barangay, General Santos City" required>
-                </div>
-                <div class="form-group">
-                    <label for="residentStatus">Status</label>
-                    <select id="residentStatus" name="status" required>
-                        <option value="">Select Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                    </select>
-                </div>
-                <button type="submit" class="save-btn">Save Resident</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- ================= TASK 5: ADD OFFICIAL MODAL ================= -->
-    <div class="modal" id="officialModal">
-        <div class="modal-box">
-            <button type="button" class="close-btn" id="closeOfficial">×</button>
-            <h2>Add Barangay Official</h2>
-            <p>Enter the official's information below.</p>
-            <form id="officialForm">
-                <div class="form-group">
-                    <label for="officialCode">Official Code</label>
-                    <input type="text" id="officialCode" name="official_code" placeholder="OFF-006" required>
-                </div>
-                <div class="form-group">
-                    <label for="officialName">Name</label>
-                    <input type="text" id="officialName" name="name" placeholder="Juan Dela Cruz" minlength="3" required>
-                </div>
-                <div class="form-group">
-                    <label for="officialPosition">Position</label>
-                    <select id="officialPosition" name="position" required>
-                        <option value="">Select Position</option>
-                        <option>Barangay Captain</option>
-                        <option>Kagawad</option>
-                        <option>Secretary</option>
-                        <option>Treasurer</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="officialContact">Contact Number</label>
-                    <input type="tel" id="officialContact" name="contact_number" placeholder="09123456789" pattern="09[0-9]{9}" title="Enter an 11-digit Philippine mobile number starting with 09" required>
-                </div>
-                <div class="form-group">
-                    <label for="officialTerm">Term</label>
-                    <input type="text" id="officialTerm" name="term" placeholder="2026-2029" pattern="[0-9]{4}-[0-9]{4}" title="Use the format YYYY-YYYY" required>
-                </div>
-                <button type="submit" class="save-btn">Add Official</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- ================= TASK 5: ADD CERTIFICATE MODAL ================= -->
-    <div class="modal" id="certificateModal">
-        <div class="modal-box">
-            <button type="button" class="close-btn" id="closeCertificate">×</button>
-            <h2>Add Barangay Certificate</h2>
-            <p>Enter the certificate information below.</p>
-            <form id="certificateForm">
-                <div class="form-group">
-                    <label for="certificateCode">Certificate Code</label>
-                    <input type="text" id="certificateCode" name="certificate_code" placeholder="CERT-006" required>
-                </div>
-                <div class="form-group">
-                    <label for="certificateResident">Resident Name</label>
-                    <input type="text" id="certificateResident" name="resident_name" placeholder="Juan Dela Cruz" minlength="3" required>
-                </div>
-                <div class="form-group">
-                    <label for="certificateType">Certificate Type</label>
-                    <select id="certificateType" name="certificate_type" required>
-                        <option value="">Select Certificate</option>
-                        <option>Certificate of Residency</option>
-                        <option>Barangay Clearance</option>
-                        <option>Certificate of Indigency</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="certificateDate">Date Issued</label>
-                    <input type="date" id="certificateDate" name="date_issued" required>
-                </div>
-                <div class="form-group">
-                    <label for="certificatePurpose">Purpose</label>
-                    <textarea id="certificatePurpose" name="purpose" placeholder="Enter purpose" minlength="3" rows="3" required></textarea>
-                </div>
-                <button type="submit" class="save-btn">Add Certificate</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- ================= SEARCH MODAL ================= -->
-
-    <div class="modal" id="searchModal">
-
-        <div class="modal-box search-box">
-
-            <button class="close-btn" id="closeSearch">
-                ×
+            <button class="logout-btn" id="logoutBtn">
+                ↪ &nbsp; Log out
             </button>
 
-            <h2>Search Resident</h2>
+        </aside>
 
-            <p>
-                Search by name, address, or contact number.
-            </p>
 
-            <input
-                type="text"
-                id="searchInput"
-                class="search-input"
-                placeholder="Type resident name..."
-            >
+        <!-- ================= MAIN ================= -->
 
-            <div id="searchResults"></div>
+        <main class="main-content">
+
+
+            <!-- TOP NAVIGATION -->
+
+            <header class="topbar">
+
+                <nav class="top-navigation">
+
+                    <button class="top-link active" data-page="dashboard">
+                        ▦ &nbsp; Dashboard
+                    </button>
+
+                    <button class="top-link" data-page="residents">
+                        ♙ &nbsp; Residents
+                    </button>
+
+                    <button class="top-link" data-page="records">
+                        ▤ &nbsp; Records
+                    </button>
+
+                    <button class="top-link" data-page="reports">
+                        ▥ &nbsp; Reports
+                    </button>
+
+                </nav>
+
+
+                <div class="staff-profile">
+
+                    <div class="notification">
+                        ♧
+                    </div>
+
+                    <div class="profile-circle">
+                        BS
+                    </div>
+
+                    <div class="profile-text">
+                        <strong>Barangay Staff</strong>
+                        <small>Administrator</small>
+                    </div>
+
+                    <span class="arrow">⌄</span>
+
+                </div>
+
+            </header>
+
+
+            <!-- ================= HERO ================= -->
+
+            <section class="hero">
+
+                <div class="hero-overlay"></div>
+
+                <div class="hero-content">
+
+                    <div class="greeting">
+                        GOOD MORNING, STAFF!
+                    </div>
+
+                    <h1>
+                        Barangay Resident<br>
+                        Records Management System
+                    </h1>
+
+                    <p>
+                        Manage, search, and organize resident records efficiently.<br>
+                        Keep the information accurate, updated, and accessible<br>
+                        for better barangay service.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= DASHBOARD CONTENT ================= -->
+
+            <section class="dashboard-content">
+
+
+                <!-- STATISTICS -->
+
+                <div class="statistics">
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon blue">
+                            ♙
+                        </div>
+
+                        <div>
+                            <span>Total Residents</span>
+                            <strong id="totalResidents">0</strong>
+                            <small>All registered records</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon green">
+                            ✓
+                        </div>
+
+                        <div>
+                            <span>Active Residents</span>
+                            <strong id="activeResidents">0</strong>
+                            <small>Currently active</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon orange">
+                            ▣
+                        </div>
+
+                        <div>
+                            <span>Added This Month</span>
+                            <strong id="monthlyResidents">0</strong>
+                            <small>New registrations</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon purple">
+                            ▤
+                        </div>
+
+                        <div>
+                            <span>Total Records</span>
+                            <strong id="totalRecords">0</strong>
+                            <small>All time records</small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- QUICK ACTIONS -->
+
+                <div class="section-title">
+                    <h2>Quick Actions</h2>
+                </div>
+
+
+                <div class="quick-actions">
+
+
+                    <button class="action-card add-action">
+
+                        <div class="action-icon blue-icon">
+                            +
+                        </div>
+
+                        <div>
+                            <strong>Add Resident</strong>
+                            <span>Register new<br>resident record</span>
+                        </div>
+
+                        <b>›</b>
+
+                    </button>
+
+
+                    <button class="action-card search-action">
+
+                        <div class="action-icon green-icon">
+                            ⌕
+                        </div>
+
+                        <div>
+                            <strong>Search Records</strong>
+                            <span>Find resident<br>information</span>
+                        </div>
+
+                        <b>›</b>
+
+                    </button>
+
+
+                    <button class="action-card update-action">
+
+                        <div class="action-icon orange-icon">
+                            ✎
+                        </div>
+
+                        <div>
+                            <strong>Update Information</strong>
+                            <span>Edit and update<br>resident details</span>
+                        </div>
+
+                        <b>›</b>
+
+                    </button>
+
+
+                    <button class="action-card report-action">
+
+                        <div class="action-icon purple-icon">
+                            ▥
+                        </div>
+
+                        <div>
+                            <strong>View Reports</strong>
+                            <span>Generate reports<br>and statistics</span>
+                        </div>
+
+                        <b>›</b>
+
+                    </button>
+
+                </div>
+
+
+                <!-- ================= RECENT RESIDENTS ================= -->
+
+                <div class="recent-header">
+
+                    <h2>Recently Added Residents</h2>
+
+                    <button id="viewAllBtn">
+                        View all residents →
+                    </button>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>ID</th>
+                                <th>Resident Name</th>
+                                <th>Age</th>
+                                <th>Address</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Date Added</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="residentTable">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- ================= BARANGAY OFFICIALS ================= -->
+
+                <div class="additional-table-section">
+
+                    <div class="recent-header">
+
+                        <h2>Barangay Officials</h2>
+                        <button type="button" class="table-action-btn" id="addOfficialBtn">
+                            + Add Official
+                        </button>
+
+                    </div>
+
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>Official ID</th>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Contact Number</th>
+                                    <th>Term</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="officialTable">
+
+                                <tr>
+                                    <td>OFF-001</td>
+                                    <td>Roberto Santos</td>
+                                    <td>Barangay Captain</td>
+                                    <td>0917-123-4567</td>
+                                    <td>2023–2026</td>
+                                </tr>
+
+                                <tr>
+                                    <td>OFF-002</td>
+                                    <td>Elena Cruz</td>
+                                    <td>Kagawad</td>
+                                    <td>0918-234-5678</td>
+                                    <td>2023–2026</td>
+                                </tr>
+
+                                <tr>
+                                    <td>OFF-003</td>
+                                    <td>Mark Reyes</td>
+                                    <td>Kagawad</td>
+                                    <td>0919-345-6789</td>
+                                    <td>2023–2026</td>
+                                </tr>
+
+                                <tr>
+                                    <td>OFF-004</td>
+                                    <td>Linda Garcia</td>
+                                    <td>Secretary</td>
+                                    <td>0920-456-7890</td>
+                                    <td>2023–2026</td>
+                                </tr>
+
+                                <tr>
+                                    <td>OFF-005</td>
+                                    <td>Joseph Dela Cruz</td>
+                                    <td>Treasurer</td>
+                                    <td>0921-567-8901</td>
+                                    <td>2023–2026</td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================= DOCUMENT REQUESTS ================= -->
+
+                <div class="additional-table-section">
+
+                    <div class="recent-header">
+
+                        <h2>Barangay Document Requests</h2>
+
+                    </div>
+
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>Request ID</th>
+                                    <th>Resident Name</th>
+                                    <th>Document Type</th>
+                                    <th>Date Requested</th>
+                                    <th>Status</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                <tr>
+                                    <td>REQ-001</td>
+                                    <td>Juan Dela Cruz</td>
+                                    <td>Barangay Clearance</td>
+                                    <td>Aug. 18, 2026</td>
+                                    <td>
+                                        <span class="status completed-status">
+                                            Completed
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>REQ-002</td>
+                                    <td>Maria Santos</td>
+                                    <td>Certificate of Residency</td>
+                                    <td>Aug. 18, 2026</td>
+                                    <td>
+                                        <span class="status pending-status">
+                                            Pending
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>REQ-003</td>
+                                    <td>Pedro Garcia</td>
+                                    <td>Barangay Indigency</td>
+                                    <td>Aug. 19, 2026</td>
+                                    <td>
+                                        <span class="status completed-status">
+                                            Completed
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>REQ-004</td>
+                                    <td>Ana Reyes</td>
+                                    <td>Barangay Clearance</td>
+                                    <td>Aug. 19, 2026</td>
+                                    <td>
+                                        <span class="status processing-status">
+                                            Processing
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>REQ-005</td>
+                                    <td>Carlo Mendoza</td>
+                                    <td>Certificate of Residency</td>
+                                    <td>Aug. 20, 2026</td>
+                                    <td>
+                                        <span class="status pending-status">
+                                            Pending
+                                        </span>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================= BARANGAY CERTIFICATES ================= -->
+
+                <div class="additional-table-section">
+
+                    <div class="recent-header">
+
+                        <h2>Barangay Certificates</h2>
+                        <button type="button" class="table-action-btn" id="addCertificateBtn">
+                            + Add Certificate
+                        </button>
+
+                    </div>
+
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>Certificate ID</th>
+                                    <th>Resident Name</th>
+                                    <th>Certificate Type</th>
+                                    <th>Date Issued</th>
+                                    <th>Purpose</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="certificateTable">
+
+                                <tr>
+                                    <td>CERT-001</td>
+                                    <td>Juan Dela Cruz</td>
+                                    <td>Certificate of Residency</td>
+                                    <td>Aug. 15, 2026</td>
+                                    <td>Employment</td>
+                                </tr>
+
+                                <tr>
+                                    <td>CERT-002</td>
+                                    <td>Maria Santos</td>
+                                    <td>Barangay Clearance</td>
+                                    <td>Aug. 16, 2026</td>
+                                    <td>Employment</td>
+                                </tr>
+
+                                <tr>
+                                    <td>CERT-003</td>
+                                    <td>Pedro Garcia</td>
+                                    <td>Certificate of Indigency</td>
+                                    <td>Aug. 17, 2026</td>
+                                    <td>Financial Assistance</td>
+                                </tr>
+
+                                <tr>
+                                    <td>CERT-004</td>
+                                    <td>Ana Reyes</td>
+                                    <td>Certificate of Residency</td>
+                                    <td>Aug. 18, 2026</td>
+                                    <td>School Requirement</td>
+                                </tr>
+
+                                <tr>
+                                    <td>CERT-005</td>
+                                    <td>Carlo Mendoza</td>
+                                    <td>Barangay Clearance</td>
+                                    <td>Aug. 19, 2026</td>
+                                    <td>Business Requirement</td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+            </section>
+
+        </main>
+
+
+        <!-- ================= MODAL ================= -->
+
+        <div class="modal" id="residentModal">
+            <div class="modal-box">
+                <button type="button" class="close-btn" id="closeModal">×</button>
+                <h2 id="modalTitle">Add Resident</h2>
+                <p>Enter the resident's information below.</p>
+                <form id="residentForm">
+                    <input type="hidden" id="editId" name="editId">
+                    <div class="form-group">
+                        <label for="residentName">Full Name</label>
+                        <input type="text" id="residentName" name="full_name" placeholder="Juan Dela Cruz"
+                            minlength="3" maxlength="100"
+                            pattern="[A-Za-zÀ-ÿ .'-]+"
+                            title="Enter a valid name using letters, spaces, apostrophes, periods, or hyphens."
+                            required>
+                        <small class="field-error" id="residentNameError"></small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="residentAge">Age</label>
+                            <input type="number" id="residentAge" name="age" placeholder="25"
+                                min="1" max="120" required>
+                            <small class="field-error" id="residentAgeError"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="residentContact">Contact Number</label>
+                            <input type="tel" id="residentContact" name="contact" placeholder="09123456789"
+                                minlength="11" maxlength="11"
+                                pattern="09[0-9]{9}"
+                                title="Enter an 11-digit Philippine mobile number starting with 09."
+                                required>
+                            <small class="field-error" id="residentContactError"></small>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="residentAddress">Address</label>
+                        <input type="text" id="residentAddress" name="address"
+                            placeholder="Purok 3, Barangay, General Santos City"
+                            minlength="5" maxlength="255" required>
+                        <small class="field-error" id="residentAddressError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="residentStatus">Status</label>
+                        <select id="residentStatus" name="status" required>
+                            <option value="">Select Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                        <small class="field-error" id="residentStatusError"></small>
+                    </div>
+                    <button type="submit" class="save-btn">Save Resident</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= TASK 5: ADD OFFICIAL MODAL ================= -->
+        <div class="modal" id="officialModal">
+            <div class="modal-box">
+                <button type="button" class="close-btn" id="closeOfficial">×</button>
+                <h2>Add Barangay Official</h2>
+                <p>Enter the official's information below.</p>
+                <form id="officialForm">
+                    <div class="form-group">
+                        <label for="officialCode">Official Code</label>
+                        <input type="text" id="officialCode" name="official_code" placeholder="OFF-006"
+                            minlength="7" maxlength="7"
+                            pattern="OFF-[0-9]{3}"
+                            title="Use the format OFF-000."
+                            required>
+                        <small class="field-error" id="officialCodeError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="officialName">Name</label>
+                        <input type="text" id="officialName" name="name" placeholder="Juan Dela Cruz"
+                            minlength="3" maxlength="100"
+                            pattern="[A-Za-zÀ-ÿ .'-]+"
+                            title="Enter a valid name using letters, spaces, apostrophes, periods, or hyphens."
+                            required>
+                        <small class="field-error" id="officialNameError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="officialPosition">Position</label>
+                        <select id="officialPosition" name="position" required>
+                            <option value="">Select Position</option>
+                            <option>Barangay Captain</option>
+                            <option>Kagawad</option>
+                            <option>Secretary</option>
+                            <option>Treasurer</option>
+                        </select>
+                        <small class="field-error" id="officialPositionError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="officialContact">Contact Number</label>
+                        <input type="tel" id="officialContact" name="contact_number" placeholder="09123456789"
+                            minlength="11" maxlength="11"
+                            pattern="09[0-9]{9}"
+                            title="Enter an 11-digit Philippine mobile number starting with 09."
+                            required>
+                        <small class="field-error" id="officialContactError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="officialTerm">Term</label>
+                        <input type="text" id="officialTerm" name="term" placeholder="2026-2029"
+                            minlength="9" maxlength="9"
+                            pattern="[0-9]{4}-[0-9]{4}"
+                            title="Use the format YYYY-YYYY."
+                            required>
+                        <small class="field-error" id="officialTermError"></small>
+                    </div>
+                    <button type="submit" class="save-btn">Add Official</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= TASK 5: ADD CERTIFICATE MODAL ================= -->
+        <div class="modal" id="certificateModal">
+            <div class="modal-box">
+                <button type="button" class="close-btn" id="closeCertificate">×</button>
+                <h2>Add Barangay Certificate</h2>
+                <p>Enter the certificate information below.</p>
+                <form id="certificateForm">
+                    <div class="form-group">
+                        <label for="certificateCode">Certificate Code</label>
+                        <input type="text" id="certificateCode" name="certificate_code" placeholder="CERT-006"
+                            minlength="8" maxlength="8"
+                            pattern="CERT-[0-9]{3}"
+                            title="Use the format CERT-000."
+                            required>
+                        <small class="field-error" id="certificateCodeError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="certificateResident">Resident Name</label>
+                        <input type="text" id="certificateResident" name="resident_name" placeholder="Juan Dela Cruz"
+                            minlength="3" maxlength="100"
+                            pattern="[A-Za-zÀ-ÿ .'-]+"
+                            title="Enter a valid name using letters, spaces, apostrophes, periods, or hyphens."
+                            required>
+                        <small class="field-error" id="certificateResidentError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="certificateType">Certificate Type</label>
+                        <select id="certificateType" name="certificate_type" required>
+                            <option value="">Select Certificate</option>
+                            <option>Certificate of Residency</option>
+                            <option>Barangay Clearance</option>
+                            <option>Certificate of Indigency</option>
+                        </select>
+                        <small class="field-error" id="certificateTypeError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="certificateDate">Date Issued</label>
+                        <input type="date" id="certificateDate" name="date_issued" required>
+                        <small class="field-error" id="certificateDateError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="certificatePurpose">Purpose</label>
+                        <textarea id="certificatePurpose" name="purpose" placeholder="Enter purpose"
+                                minlength="3" maxlength="255" rows="3" required></textarea>
+                        <small class="field-error" id="certificatePurposeError"></small>
+                    </div>
+                    <button type="submit" class="save-btn">Add Certificate</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= SEARCH MODAL ================= -->
+
+        <div class="modal" id="searchModal">
+
+            <div class="modal-box search-box">
+
+                <button class="close-btn" id="closeSearch">
+                    ×
+                </button>
+
+                <h2>Search Resident</h2>
+
+                <p>
+                    Search by name, address, or contact number.
+                </p>
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="search-input"
+                    placeholder="Type resident name..."
+                >
+
+                <div id="searchResults"></div>
+
+            </div>
 
         </div>
 
-    </div>
 
+        <!-- ================= JAVASCRIPT ================= -->
 
-    <!-- ================= JAVASCRIPT ================= -->
+        <script src="js/script.js"></script>
 
-    <script src="js/script.js"></script>
+    </body>
 
-</body>
-
-</html>
+    </html>

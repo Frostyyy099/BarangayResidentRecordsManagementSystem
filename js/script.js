@@ -1277,6 +1277,422 @@ document.addEventListener(
 );
 
 
+
+/* =========================================================
+   TASK 6 - CLIENT-SIDE DATA INPUT VALIDATION
+   ========================================================= */
+
+/*
+   Task 6 requirements covered here:
+   - Required fields
+   - Correct data formats
+   - JavaScript submit validation
+   - User-friendly error messages
+   - Visual invalid/valid feedback
+   - Validation for all system forms
+*/
+
+const task6Forms = [
+    document.getElementById("residentForm"),
+    document.getElementById("officialForm"),
+    document.getElementById("certificateForm")
+].filter(Boolean);
+
+
+/* -------------------------
+   VALIDATION HELPERS
+   ------------------------- */
+
+function showTask6Error(field, errorId, message) {
+
+    const error = document.getElementById(errorId);
+
+    field.classList.remove("validation-valid");
+    field.classList.add("validation-invalid");
+
+    field.setCustomValidity(message);
+
+    if (error) {
+        error.textContent = message;
+        error.classList.add("show");
+    }
+}
+
+
+function showTask6Success(field, errorId) {
+
+    const error = document.getElementById(errorId);
+
+    field.classList.remove("validation-invalid");
+    field.classList.add("validation-valid");
+
+    field.setCustomValidity("");
+
+    if (error) {
+        error.textContent = "";
+        error.classList.remove("show");
+    }
+}
+
+
+function clearTask6State(field, errorId) {
+
+    const error = document.getElementById(errorId);
+
+    field.classList.remove(
+        "validation-invalid",
+        "validation-valid"
+    );
+
+    field.setCustomValidity("");
+
+    if (error) {
+        error.textContent = "";
+        error.classList.remove("show");
+    }
+}
+
+
+/* -------------------------
+   INDIVIDUAL FIELD RULES
+   ------------------------- */
+
+function validateTask6Field(field, forceShow = false) {
+
+    if (!field) {
+        return true;
+    }
+
+    const id = field.id;
+    const value = field.value.trim();
+    const shouldShow = forceShow || field.dataset.touched === "true";
+
+    let errorId = id + "Error";
+    let message = "";
+
+    /* Required fields */
+    if (field.required && !value) {
+        message = "This field is required.";
+    }
+
+    /* Names */
+    else if (
+        ["residentName", "officialName", "certificateResident"].includes(id)
+    ) {
+        const namePattern = /^[A-Za-zÀ-ÿ .'-]+$/;
+
+        if (value.length < 3) {
+            message = "Name must contain at least 3 characters.";
+        } else if (!namePattern.test(value)) {
+            message = "Enter a valid name using letters, spaces, apostrophes, periods, or hyphens.";
+        } else if (value.length > 100) {
+            message = "Name must not exceed 100 characters.";
+        }
+    }
+
+    /* Age */
+    else if (id === "residentAge") {
+
+        const age = Number(value);
+
+        if (!Number.isInteger(age) || age < 1 || age > 120) {
+            message = "Age must be a whole number from 1 to 120.";
+        }
+    }
+
+    /* Philippine mobile numbers */
+    else if (
+        id === "residentContact" ||
+        id === "officialContact"
+    ) {
+
+        if (!/^09\d{9}$/.test(value)) {
+            message = "Enter an 11-digit Philippine mobile number starting with 09.";
+        }
+    }
+
+    /* Address */
+    else if (id === "residentAddress") {
+
+        if (value.length < 5) {
+            message = "Address must contain at least 5 characters.";
+        } else if (value.length > 255) {
+            message = "Address must not exceed 255 characters.";
+        }
+    }
+
+    /* Resident status */
+    else if (id === "residentStatus") {
+
+        if (!["Active", "Inactive"].includes(value)) {
+            message = "Please select Active or Inactive.";
+        }
+    }
+
+    /* Official code */
+    else if (id === "officialCode") {
+
+        if (!/^OFF-\d{3}$/.test(value)) {
+            message = "Use the format OFF-000, for example OFF-006.";
+        }
+    }
+
+    /* Official position */
+    else if (id === "officialPosition") {
+
+        if (
+            ![
+                "Barangay Captain",
+                "Kagawad",
+                "Secretary",
+                "Treasurer"
+            ].includes(value)
+        ) {
+            message = "Please select a valid barangay position.";
+        }
+    }
+
+    /* Official term */
+    else if (id === "officialTerm") {
+
+        const match = value.match(/^(\d{4})-(\d{4})$/);
+
+        if (!match) {
+            message = "Use the format YYYY-YYYY, for example 2026-2029.";
+        } else if (Number(match[2]) <= Number(match[1])) {
+            message = "The ending year must be later than the starting year.";
+        }
+    }
+
+    /* Certificate code */
+    else if (id === "certificateCode") {
+
+        if (!/^CERT-\d{3}$/.test(value)) {
+            message = "Use the format CERT-000, for example CERT-006.";
+        }
+    }
+
+    /* Certificate type */
+    else if (id === "certificateType") {
+
+        if (
+            ![
+                "Certificate of Residency",
+                "Barangay Clearance",
+                "Certificate of Indigency"
+            ].includes(value)
+        ) {
+            message = "Please select a valid certificate type.";
+        }
+    }
+
+    /* Certificate date */
+    else if (id === "certificateDate") {
+
+        const selectedDate = new Date(value + "T00:00:00");
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+        if (Number.isNaN(selectedDate.getTime())) {
+            message = "Please enter a valid date.";
+        } else if (selectedDate > today) {
+            message = "Date issued cannot be a future date.";
+        }
+    }
+
+    /* Certificate purpose */
+    else if (id === "certificatePurpose") {
+
+        if (value.length < 3) {
+            message = "Purpose must contain at least 3 characters.";
+        } else if (value.length > 255) {
+            message = "Purpose must not exceed 255 characters.";
+        }
+    }
+
+
+    if (message) {
+
+        field.setCustomValidity(message);
+
+        if (shouldShow) {
+            showTask6Error(field, errorId, message);
+        }
+
+        return false;
+    }
+
+
+    field.setCustomValidity("");
+
+    if (shouldShow && value) {
+        showTask6Success(field, errorId);
+    } else if (!value) {
+        clearTask6State(field, errorId);
+    }
+
+    return true;
+}
+
+
+/* -------------------------
+   VALIDATE COMPLETE FORM
+   ------------------------- */
+
+function validateTask6Form(form) {
+
+    let isValid = true;
+    let firstInvalidField = null;
+
+    const fields = form.querySelectorAll(
+        "input:not([type='hidden']), select, textarea"
+    );
+
+    fields.forEach(function(field) {
+
+        field.dataset.touched = "true";
+
+        const valid = validateTask6Field(field, true);
+
+        if (!valid) {
+
+            isValid = false;
+
+            if (!firstInvalidField) {
+                firstInvalidField = field;
+            }
+        }
+
+    });
+
+
+    if (!isValid && firstInvalidField) {
+
+        firstInvalidField.focus();
+
+        alert(
+            "Please correct the highlighted field(s) before submitting."
+        );
+
+        return false;
+    }
+
+
+    return form.checkValidity();
+}
+
+
+/* -------------------------
+   SET TODAY AS MAX CERTIFICATE DATE
+   ------------------------- */
+
+const certificateDateField =
+    document.getElementById("certificateDate");
+
+if (certificateDateField) {
+
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    certificateDateField.max =
+        `${year}-${month}-${day}`;
+}
+
+
+/* -------------------------
+   INPUT + BLUR VALIDATION
+   ------------------------- */
+
+task6Forms.forEach(function(form) {
+
+    const fields = form.querySelectorAll(
+        "input:not([type='hidden']), select, textarea"
+    );
+
+
+    fields.forEach(function(field) {
+
+        field.addEventListener(
+            "input",
+            function() {
+
+                field.dataset.touched = "true";
+
+                validateTask6Field(field);
+            }
+        );
+
+
+        field.addEventListener(
+            "change",
+            function() {
+
+                field.dataset.touched = "true";
+
+                validateTask6Field(field);
+            }
+        );
+
+
+        field.addEventListener(
+            "blur",
+            function() {
+
+                field.dataset.touched = "true";
+
+                validateTask6Field(field);
+            }
+        );
+
+    });
+
+
+    /* Clear visual feedback after reset */
+    form.addEventListener(
+        "reset",
+        function() {
+
+            fields.forEach(function(field) {
+
+                field.dataset.touched = "false";
+
+                clearTask6State(
+                    field,
+                    field.id + "Error"
+                );
+
+            });
+
+        }
+    );
+
+
+    /*
+       Capture phase makes Task 6 validation run BEFORE
+       the original Task 5 submit handlers.
+    */
+    form.addEventListener(
+        "submit",
+        function(event) {
+
+            if (!validateTask6Form(form)) {
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+
+            }
+
+        },
+        true
+    );
+
+});
+
+
 /* =========================
    START SYSTEM
    ========================= */

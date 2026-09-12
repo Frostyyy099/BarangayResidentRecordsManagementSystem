@@ -139,308 +139,78 @@ app.post("/api/login", (req, res) => {
     if (!username || !password) {
         return res.status(400).json({
             success: false,
-            message: "Username and password are required."
+            message: "Username/Email and password are required."
         });
     }
 
     const sql = `
         SELECT *
         FROM users
-        WHERE username = ?
+        WHERE username = ? OR email = ?
+        LIMIT 1
     `;
 
-    db.query(sql, [username], async (err, results) => {
+    db.query(
+        sql,
+        [username, username],
+        async (err, results) => {
 
-        if (err) {
+            if (err) {
+                console.error(err);
 
-            console.error(err);
+                return res.status(500).json({
+                    success: false,
+                    message: "Database error."
+                });
+            }
 
-            return res.status(500).json({
-                success: false,
-                message: "Database error."
-            });
-
-        }
-
-        if (results.length === 0) {
-
-            return res.status(401).json({
-                success: false,
-                message: "Invalid username or password."
-            });
-
-        }
-
-        const user = results[0];
-
-        try {
-
-            const passwordMatch =
-                await bcrypt.compare(password, user.password);
-
-            if (!passwordMatch) {
-
+            if (results.length === 0) {
                 return res.status(401).json({
                     success: false,
-                    message: "Invalid username or password."
+                    message: "Invalid username/email or password."
                 });
-
             }
 
-            res.json({
-                success: true,
-                message: "Login successful!",
-                user: {
-                    user_id: user.user_id,
-                    full_name: user.full_name,
-                    username: user.username,
-                    role: user.role
+            const user = results[0];
+
+            try {
+
+                const passwordMatch = await bcrypt.compare(
+                    password,
+                    user.password
+                );
+
+                if (!passwordMatch) {
+                    return res.status(401).json({
+                        success: false,
+                        message: "Invalid username/email or password."
+                    });
                 }
-            });
 
-        } catch (error) {
+                res.json({
+                    success: true,
+                    message: "Login successful!",
+                    user: {
+                        user_id: user.user_id,
+                        full_name: user.full_name,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role
+                    }
+                });
 
-            console.error(error);
+            } catch (error) {
 
-            res.status(500).json({
-                success: false,
-                message: "Login error."
-            });
+                console.error(error);
 
-        }
-
-    });
-
-});
-
-// =========================
-// GET RESIDENTS
-// =========================
-
-app.get("/api/residents", (req, res) => {
-
-    const sql = `
-        SELECT
-            resident_id,
-            resident_code,
-            full_name,
-            age,
-            address,
-            contact,
-            status,
-            date_added
-        FROM residents
-        ORDER BY resident_id DESC
-    `;
-
-    db.query(sql, (err, results) => {
-
-        if (err) {
-
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                message: "Failed to retrieve residents."
-            });
-
-        }
-
-        res.json(results);
-
-    });
-
-});
-
-// =========================
-// ADD RESIDENT
-// =========================
-
-app.post("/api/residents", (req, res) => {
-
-    const {
-        full_name,
-        age,
-        address,
-        contact,
-        status
-    } = req.body;
-
-    if (!full_name || !age || !address || !contact || !status) {
-
-        return res.status(400).json({
-            success: false,
-            message: "All resident fields are required."
-        });
-
-    }
-
-    const residentCode =
-        "BRR-" +
-        Date.now().toString().slice(-4);
-
-    const sql = `
-        INSERT INTO residents
-        (resident_code, full_name, age, address, contact, status, date_added)
-        VALUES (?, ?, ?, ?, ?, ?, CURDATE())
-    `;
-
-    db.query(
-        sql,
-        [
-            residentCode,
-            full_name,
-            age,
-            address,
-            contact,
-            status
-        ],
-        (err, result) => {
-
-            if (err) {
-
-                console.error(err);
-
-                return res.status(500).json({
+                res.status(500).json({
                     success: false,
-                    message: "Failed to add resident."
+                    message: "Login error."
                 });
 
             }
 
-            res.status(201).json({
-                success: true,
-                message: "Resident added successfully!",
-                resident_id: result.insertId,
-                resident_code: residentCode
-            });
-
         }
-    );
-
-});
-
-// =========================
-// UPDATE RESIDENT
-// =========================
-
-app.put("/api/residents/:id", (req, res) => {
-
-    const residentId = req.params.id;
-
-    const {
-        full_name,
-        age,
-        address,
-        contact,
-        status
-    } = req.body;
-
-    const sql = `
-        UPDATE residents
-        SET
-            full_name = ?,
-            age = ?,
-            address = ?,
-            contact = ?,
-            status = ?
-        WHERE resident_id = ?
-    `;
-
-    db.query(
-        sql,
-        [
-            full_name,
-            age,
-            address,
-            contact,
-            status,
-            residentId
-        ],
-        (err, result) => {
-
-            if (err) {
-
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to update resident."
-                });
-
-            }
-
-            if (result.affectedRows === 0) {
-
-                return res.status(404).json({
-                    success: false,
-                    message: "Resident not found."
-                });
-
-            }
-
-            res.json({
-                success: true,
-                message: "Resident updated successfully!"
-            });
-
-        }
-    );
-
-});
-
-// =========================
-// DELETE RESIDENT
-// =========================
-
-app.delete("/api/residents/:id", (req, res) => {
-
-    const residentId = req.params.id;
-
-    const sql = `
-        DELETE FROM residents
-        WHERE resident_id = ?
-    `;
-
-    db.query(sql, [residentId], (err, result) => {
-
-        if (err) {
-
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                message: "Failed to delete resident."
-            });
-
-        }
-
-        if (result.affectedRows === 0) {
-
-            return res.status(404).json({
-                success: false,
-                message: "Resident not found."
-            });
-
-        }
-
-        res.json({
-            success: true,
-            message: "Resident deleted successfully!"
-        });
-
-    });
-
-});
-
-// =========================
-// START SERVER
-// =========================
-
-app.listen(PORT, () => {
-
-    console.log(
-        `BRRMS server running at http://localhost:${PORT}`
     );
 
 });

@@ -1,39 +1,275 @@
+// =========================
+// BRRMS SIGN UP VALIDATION
+// TASK 6 - DATA INPUT VALIDATION
+// =========================
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const signupForm = document.getElementById("signupForm");
+
+    const fullName = document.getElementById("fullName");
+    const username = document.getElementById("username");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirmPassword");
+
+    const fullNameError = document.getElementById("fullNameError");
+    const usernameError = document.getElementById("usernameError");
+    const emailError = document.getElementById("emailError");
+    const passwordError = document.getElementById("passwordError");
+    const confirmPasswordError = document.getElementById("confirmPasswordError");
+
     const signupMessage = document.getElementById("signupMessage");
+
+
+    // =========================
+    // VALIDATION FUNCTIONS
+    // =========================
+
+    function validateFullName() {
+
+        const value = fullName.value.trim();
+
+        if (value === "") {
+            showError(fullName, fullNameError, "Full name is required.");
+            return false;
+        }
+
+        if (value.length < 3) {
+            showError(fullName, fullNameError, "Full name must be at least 3 characters.");
+            return false;
+        }
+
+        if (value.length > 100) {
+            showError(fullName, fullNameError, "Full name must not exceed 100 characters.");
+            return false;
+        }
+
+        if (!/^[A-Za-zÀ-ÿ .'-]+$/.test(value)) {
+            showError(
+                fullName,
+                fullNameError,
+                "Full name may contain letters, spaces, periods, apostrophes, and hyphens only."
+            );
+            return false;
+        }
+
+        showSuccess(fullName, fullNameError);
+        return true;
+    }
+
+
+    function validateUsername() {
+
+        const value = username.value.trim();
+
+        if (value === "") {
+            showError(username, usernameError, "Username is required.");
+            return false;
+        }
+
+        if (value.length < 3) {
+            showError(username, usernameError, "Username must be at least 3 characters.");
+            return false;
+        }
+
+        if (value.length > 50) {
+            showError(username, usernameError, "Username must not exceed 50 characters.");
+            return false;
+        }
+
+        if (!/^[A-Za-z0-9._-]+$/.test(value)) {
+            showError(
+                username,
+                usernameError,
+                "Username may contain letters, numbers, periods, underscores, and hyphens only."
+            );
+            return false;
+        }
+
+        showSuccess(username, usernameError);
+        return true;
+    }
+
+
+    function validateEmail() {
+
+        const value = email.value.trim();
+
+        if (value === "") {
+            showError(email, emailError, "Email is required.");
+            return false;
+        }
+
+        if (value.length > 150) {
+            showError(email, emailError, "Email must not exceed 150 characters.");
+            return false;
+        }
+
+        const emailPattern =
+            /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+        if (!emailPattern.test(value)) {
+            showError(email, emailError, "Please enter a valid email address.");
+            return false;
+        }
+
+        showSuccess(email, emailError);
+        return true;
+    }
+
+
+    function validatePassword() {
+
+        const value = password.value;
+
+        if (value === "") {
+            showError(password, passwordError, "Password is required.");
+            return false;
+        }
+
+        if (value.length < 8) {
+            showError(
+                password,
+                passwordError,
+                "Password must be at least 8 characters."
+            );
+            return false;
+        }
+
+        showSuccess(password, passwordError);
+        return true;
+    }
+
+
+    function validateConfirmPassword() {
+
+        const value = confirmPassword.value;
+
+        if (value === "") {
+            showError(
+                confirmPassword,
+                confirmPasswordError,
+                "Please confirm your password."
+            );
+            return false;
+        }
+
+        if (value !== password.value) {
+            showError(
+                confirmPassword,
+                confirmPasswordError,
+                "Passwords do not match."
+            );
+            return false;
+        }
+
+        showSuccess(confirmPassword, confirmPasswordError);
+        return true;
+    }
+
+
+    // =========================
+    // ERROR / SUCCESS DISPLAY
+    // =========================
+
+    function showError(input, errorElement, message) {
+
+        input.classList.remove("valid");
+        input.classList.add("invalid");
+
+        errorElement.textContent = message;
+        errorElement.classList.add("show");
+    }
+
+
+    function showSuccess(input, errorElement) {
+
+        input.classList.remove("invalid");
+        input.classList.add("valid");
+
+        errorElement.textContent = "";
+        errorElement.classList.remove("show");
+    }
+
+
+    // =========================
+    // LIVE VALIDATION
+    // =========================
+
+    fullName.addEventListener("input", validateFullName);
+
+    username.addEventListener("input", validateUsername);
+
+    email.addEventListener("input", validateEmail);
+
+    password.addEventListener("input", () => {
+        validatePassword();
+
+        // Re-check confirm password when password changes
+        if (confirmPassword.value !== "") {
+            validateConfirmPassword();
+        }
+    });
+
+    confirmPassword.addEventListener("input", validateConfirmPassword);
+
+
+    // =========================
+    // FORM SUBMISSION
+    // =========================
 
     signupForm.addEventListener("submit", async (event) => {
 
         event.preventDefault();
 
-        const fullName =
-            document.getElementById("fullName").value.trim();
-
-        const username =
-            document.getElementById("username").value.trim();
-
-        const password =
-            document.getElementById("password").value;
-
-        const confirmPassword =
-            document.getElementById("confirmPassword").value;
-
         signupMessage.textContent = "";
-        signupMessage.className = "auth-message";
+        signupMessage.className = "";
 
-        // Check password confirmation
-        if (password !== confirmPassword) {
+
+        // Validate all fields
+        const validFullName = validateFullName();
+        const validUsername = validateUsername();
+        const validEmail = validateEmail();
+        const validPassword = validatePassword();
+        const validConfirmPassword = validateConfirmPassword();
+
+
+        // Stop if validation fails
+        if (
+            !validFullName ||
+            !validUsername ||
+            !validEmail ||
+            !validPassword ||
+            !validConfirmPassword
+        ) {
 
             signupMessage.textContent =
-                "Passwords do not match.";
+                "Please correct the errors before creating your account.";
 
             signupMessage.classList.add("error");
 
             return;
         }
 
+
+        // =========================
+        // SEND DATA TO SERVER
+        // =========================
+
+        const userData = {
+            full_name: fullName.value.trim(),
+            username: username.value.trim(),
+            email: email.value.trim(),
+            password: password.value
+        };
+
+
         try {
+
+            signupMessage.textContent = "Creating account...";
+            signupMessage.classList.add("loading");
+
 
             const response = await fetch(
                 "http://localhost:3000/api/signup",
@@ -44,48 +280,74 @@ document.addEventListener("DOMContentLoaded", () => {
                         "Content-Type": "application/json"
                     },
 
-                    body: JSON.stringify({
-                        full_name: fullName,
-                        username: username,
-                        password: password
-                    })
+                    body: JSON.stringify(userData)
                 }
             );
 
+
             const data = await response.json();
 
+
+            // Server rejected request
             if (!response.ok) {
 
                 signupMessage.textContent =
                     data.message || "Unable to create account.";
 
-                signupMessage.classList.add("error");
+                signupMessage.className = "error";
 
                 return;
             }
 
-            if (data.success) {
 
-                signupMessage.textContent =
-                    "Account created successfully! Redirecting to login...";
+            // Successful registration
+            signupMessage.textContent =
+                data.message || "Account created successfully!";
 
-                signupMessage.classList.add("success");
+            signupMessage.className = "success";
 
-                signupForm.reset();
 
-                setTimeout(() => {
-                    window.location.href = "login.html";
-                }, 1000);
-            }
+            // Clear form
+            signupForm.reset();
+
+            // Remove validation styles
+            [
+                fullName,
+                username,
+                email,
+                password,
+                confirmPassword
+            ].forEach(input => {
+                input.classList.remove("valid", "invalid");
+            });
+
+
+            [
+                fullNameError,
+                usernameError,
+                emailError,
+                passwordError,
+                confirmPasswordError
+            ].forEach(error => {
+                error.textContent = "";
+                error.classList.remove("show");
+            });
+
+
+            // Redirect to login after successful signup
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 1500);
+
 
         } catch (error) {
 
             console.error("Signup error:", error);
 
             signupMessage.textContent =
-                "Unable to connect to the BRRMS server.";
+                "Cannot connect to the server. Make sure your BRRMS server is running.";
 
-            signupMessage.classList.add("error");
+            signupMessage.className = "error";
         }
 
     });
