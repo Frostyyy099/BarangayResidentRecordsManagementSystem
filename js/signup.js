@@ -1,3 +1,4 @@
+
 // =========================
 // BRRMS SIGN UP VALIDATION
 // TASK 6 - DATA INPUT VALIDATION
@@ -9,13 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fullName = document.getElementById("fullName");
     const username = document.getElementById("username");
-    const email = document.getElementById("email");
     const password = document.getElementById("password");
     const confirmPassword = document.getElementById("confirmPassword");
 
     const fullNameError = document.getElementById("fullNameError");
     const usernameError = document.getElementById("usernameError");
-    const emailError = document.getElementById("emailError");
     const passwordError = document.getElementById("passwordError");
     const confirmPasswordError = document.getElementById("confirmPasswordError");
 
@@ -36,12 +35,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (value.length < 3) {
-            showError(fullName, fullNameError, "Full name must be at least 3 characters.");
+            showError(
+                fullName,
+                fullNameError,
+                "Full name must be at least 3 characters."
+            );
             return false;
         }
 
         if (value.length > 100) {
-            showError(fullName, fullNameError, "Full name must not exceed 100 characters.");
+            showError(
+                fullName,
+                fullNameError,
+                "Full name must not exceed 100 characters."
+            );
             return false;
         }
 
@@ -69,12 +76,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (value.length < 3) {
-            showError(username, usernameError, "Username must be at least 3 characters.");
+            showError(
+                username,
+                usernameError,
+                "Username must be at least 3 characters."
+            );
             return false;
         }
 
         if (value.length > 50) {
-            showError(username, usernameError, "Username must not exceed 50 characters.");
+            showError(
+                username,
+                usernameError,
+                "Username must not exceed 50 characters."
+            );
             return false;
         }
 
@@ -92,39 +107,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function validateEmail() {
-
-        const value = email.value.trim();
-
-        if (value === "") {
-            showError(email, emailError, "Email is required.");
-            return false;
-        }
-
-        if (value.length > 150) {
-            showError(email, emailError, "Email must not exceed 150 characters.");
-            return false;
-        }
-
-        const emailPattern =
-            /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-
-        if (!emailPattern.test(value)) {
-            showError(email, emailError, "Please enter a valid email address.");
-            return false;
-        }
-
-        showSuccess(email, emailError);
-        return true;
-    }
-
-
     function validatePassword() {
 
         const value = password.value;
 
         if (value === "") {
-            showError(password, passwordError, "Password is required.");
+            showError(
+                password,
+                passwordError,
+                "Password is required."
+            );
             return false;
         }
 
@@ -201,18 +193,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     username.addEventListener("input", validateUsername);
 
-    email.addEventListener("input", validateEmail);
-
     password.addEventListener("input", () => {
+
         validatePassword();
 
-        // Re-check confirm password when password changes
         if (confirmPassword.value !== "") {
             validateConfirmPassword();
         }
+
     });
 
-    confirmPassword.addEventListener("input", validateConfirmPassword);
+    confirmPassword.addEventListener(
+        "input",
+        validateConfirmPassword
+    );
 
 
     // =========================
@@ -224,22 +218,22 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
 
         signupMessage.textContent = "";
-        signupMessage.className = "";
+        signupMessage.className = "auth-message";
 
 
         // Validate all fields
+
         const validFullName = validateFullName();
         const validUsername = validateUsername();
-        const validEmail = validateEmail();
         const validPassword = validatePassword();
         const validConfirmPassword = validateConfirmPassword();
 
 
         // Stop if validation fails
+
         if (
             !validFullName ||
             !validUsername ||
-            !validEmail ||
             !validPassword ||
             !validConfirmPassword
         ) {
@@ -258,17 +252,23 @@ document.addEventListener("DOMContentLoaded", () => {
         // =========================
 
         const userData = {
+
             full_name: fullName.value.trim(),
+
             username: username.value.trim(),
-            email: email.value.trim(),
+
             password: password.value
+
         };
 
 
         try {
 
-            signupMessage.textContent = "Creating account...";
-            signupMessage.classList.add("loading");
+            signupMessage.textContent =
+                "Creating account...";
+
+            signupMessage.className =
+                "auth-message loading";
 
 
             const response = await fetch(
@@ -289,67 +289,94 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
             // Server rejected request
+
             if (!response.ok) {
 
                 signupMessage.textContent =
-                    data.message || "Unable to create account.";
+                    data.message ||
+                    "Unable to create account.";
 
-                signupMessage.className = "error";
+                signupMessage.className =
+                    "auth-message error";
 
                 return;
             }
 
 
             // Successful registration
-            signupMessage.textContent =
-                data.message || "Account created successfully!";
 
-            signupMessage.className = "success";
+            signupMessage.textContent =
+                data.message ||
+                "Account created successfully!";
+
+            signupMessage.className =
+                "auth-message success";
 
 
             // Clear form
+
             signupForm.reset();
 
+
             // Remove validation styles
+
             [
                 fullName,
                 username,
-                email,
                 password,
                 confirmPassword
             ].forEach(input => {
-                input.classList.remove("valid", "invalid");
+
+                input.classList.remove(
+                    "valid",
+                    "invalid"
+                );
+
             });
 
+
+            // Remove error messages
 
             [
                 fullNameError,
                 usernameError,
-                emailError,
                 passwordError,
                 confirmPasswordError
             ].forEach(error => {
+
                 error.textContent = "";
+
                 error.classList.remove("show");
+
             });
 
 
-            // Redirect to login after successful signup
+            // Redirect to login
+
             setTimeout(() => {
-                window.location.href = "login.html";
+
+                window.location.href =
+                    "login.html";
+
             }, 1500);
 
 
         } catch (error) {
 
-            console.error("Signup error:", error);
+            console.error(
+                "Signup error:",
+                error
+            );
 
             signupMessage.textContent =
                 "Cannot connect to the server. Make sure your BRRMS server is running.";
 
-            signupMessage.className = "error";
+            signupMessage.className =
+                "auth-message error";
+
         }
 
     });
 
 });
+

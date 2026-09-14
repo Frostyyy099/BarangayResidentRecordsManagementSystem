@@ -1,104 +1,157 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-```
-<title>BRRMS - Sign Up</title>
+    <title>BRRMS - Sign Up</title>
 
-<link rel="stylesheet" href="css/stylee.css">
-```
-
+    <link rel="stylesheet" href="css/stylee.css">
 </head>
 
 <body>
 
-```
-<div class="auth-container">
+    <div class="auth-container">
 
-    <div class="auth-card">
+        <div class="auth-card">
 
-        <div class="auth-logo">
-            <img src="images/logo.png" alt="BRRMS Logo"
+            <div class="auth-logo">
+                <img src="images/logo.png" alt="BRRMS">
+            </div>
+
+            <h1>Create Account</h1>
+
+            <p class="auth-subtitle">
+                Barangay Resident Records Management System
+            </p>
+
+            <h2>Sign Up</h2>
+
+            <form id="signupForm">
+
+                <!-- FULL NAME -->
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+
+                    <input
+                        type="text"
+                        id="fullName"
+                        placeholder="Juan Dela Cruz"
+                        minlength="3"
+                        maxlength="100"
+                        required
+                    >
+
+                    <p id="fullNameError" class="error-message"></p>
+                </div>
+
+
+                <!-- EMAIL -->
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="example@email.com"
+                        maxlength="100"
+                        required
+                    >
+
+                    <p id="emailError" class="error-message"></p>
+                </div>
+
+
+                <!-- USERNAME -->
+                <div class="form-group">
+                    <label for="username">Username</label>
+
+                    <input
+                        type="text"
+                        id="username"
+                        placeholder="Enter your username"
+                        minlength="3"
+                        maxlength="50"
+                        required
+                    >
+
+                    <p id="usernameError" class="error-message"></p>
+                </div>
+
+
+                <!-- PASSWORD -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Create a password"
+                        minlength="8"
+                        required
+                    >
+
+                    <p id="passwordError" class="error-message"></p>
+                </div>
+
+
+                <!-- CONFIRM PASSWORD -->
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        placeholder="Confirm your password"
+                        minlength="8"
+                        required
+                    >
+
+                    <p id="confirmPasswordError" class="error-message"></p>
+                </div>
+
+
+                <!-- MFA CODE -->
+                <div class="form-group">
+                    <label for="mfaCode">MFA Code</label>
+
+                    <input
+                        type="text"
+                        id="mfaCode"
+                        placeholder="Enter 6-digit MFA code"
+                        maxlength="6"
+                        inputmode="numeric"
+                        pattern="[0-9]{6}"
+                        required
+                    >
+
+                    <p id="mfaError" class="error-message"></p>
+                </div>
+
+
+                <!-- BUTTON -->
+                <button type="submit" class="auth-btn">
+                    Create Account
+                </button>
+
+
+                <p id="signupMessage" class="auth-message"></p>
+
+            </form>
+
+
+            <p class="auth-switch">
+                Already have an account?
+                <a href="login.html">Login</a>
+            </p>
+
         </div>
-
-        <h1>Create Account</h1>
-
-        <p class="auth-subtitle">
-            Barangay Resident Records Management System
-        </p>
-
-        <h2>Sign Up</h2>
-
-        <form id="signupForm">
-
-            <div class="form-group">
-                <label for="fullName">Full Name</label>
-
-                <input
-                    type="text"
-                    id="fullName"
-                    placeholder="Juan Dela Cruz"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="username">Username</label>
-
-                <input
-                    type="text"
-                    id="username"
-                    placeholder="Enter your username"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Create a password"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
-
-                <input
-                    type="password"
-                    id="confirmPassword"
-                    placeholder="Confirm your password"
-                    required
-                >
-            </div>
-
-            <button type="submit" class="auth-btn">
-                Create Account
-            </button>
-
-            <p id="signupMessage" class="auth-message"></p>
-
-        </form>
-
-        <p class="auth-switch">
-            Already have an account?
-            <a href="login.html">Login</a>
-        </p>
 
     </div>
 
-</div>
 
-<script src="js/signup.js"></script>
-```
+    <script src="js/signup.js"></script>
 
 </body>
-
 </html>
