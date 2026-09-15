@@ -1,15 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    const loginForm = document.getElementById("loginForm");
-    const loginMessage = document.getElementById("loginMessage");
+    const loginForm =
+        document.getElementById("loginForm");
 
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
-    const mfaInput = document.getElementById("mfaCode");
+    const loginMessage =
+        document.getElementById("loginMessage");
 
-    const usernameError = document.getElementById("usernameError");
-    const passwordError = document.getElementById("passwordError");
-    const mfaError = document.getElementById("mfaError");
+
+    const usernameInput =
+        document.getElementById("username");
+
+    const passwordInput =
+        document.getElementById("password");
+
+    const mfaInput =
+        document.getElementById("mfaCode");
+
+
+    const usernameError =
+        document.getElementById("usernameError");
+
+    const passwordError =
+        document.getElementById("passwordError");
+
+    const mfaError =
+        document.getElementById("mfaError");
 
 
     // =========================
@@ -22,189 +37,326 @@ document.addEventListener("DOMContentLoaded", () => {
         passwordError.textContent = "";
         mfaError.textContent = "";
 
-        usernameInput.classList.remove("invalid", "valid");
-        passwordInput.classList.remove("invalid", "valid");
-        mfaInput.classList.remove("invalid", "valid");
+        usernameInput.classList.remove(
+            "invalid",
+            "valid"
+        );
+
+        passwordInput.classList.remove(
+            "invalid",
+            "valid"
+        );
+
+        mfaInput.classList.remove(
+            "invalid",
+            "valid"
+        );
+
     }
 
 
     // =========================
-    // LOGIN VALIDATION
+    // LOGIN
     // =========================
 
-    loginForm.addEventListener("submit", async (event) => {
+    loginForm.addEventListener(
+        "submit",
+        async (event) => {
 
-        event.preventDefault();
+            event.preventDefault();
 
-        clearValidation();
+            clearValidation();
 
-        loginMessage.textContent = "";
-        loginMessage.className = "auth-message";
+            loginMessage.textContent = "";
 
-        let isValid = true;
-
-
-        // USERNAME / EMAIL
-        const username = usernameInput.value.trim();
-
-        if (username === "") {
-
-            usernameError.textContent =
-                "Username or email is required.";
-
-            usernameInput.classList.add("invalid");
-
-            isValid = false;
-
-        } else if (username.length < 3) {
-
-            usernameError.textContent =
-                "Username or email must be at least 3 characters.";
-
-            usernameInput.classList.add("invalid");
-
-            isValid = false;
-
-        } else {
-
-            usernameInput.classList.add("valid");
-        }
+            loginMessage.className =
+                "auth-message";
 
 
-        // PASSWORD
-        const password = passwordInput.value;
-
-        if (password === "") {
-
-            passwordError.textContent =
-                "Password is required.";
-
-            passwordInput.classList.add("invalid");
-
-            isValid = false;
-
-        } else if (password.length < 8) {
-
-            passwordError.textContent =
-                "Password must be at least 8 characters.";
-
-            passwordInput.classList.add("invalid");
-
-            isValid = false;
-
-        } else {
-
-            passwordInput.classList.add("valid");
-        }
+            let isValid = true;
 
 
-        // MFA
-        const mfaCode = mfaInput.value.trim();
+            // =========================
+            // USERNAME / EMAIL
+            // =========================
 
-        if (mfaCode === "") {
-
-            mfaError.textContent =
-                "MFA code is required.";
-
-            mfaInput.classList.add("invalid");
-
-            isValid = false;
-
-        } else if (!/^[0-9]{6}$/.test(mfaCode)) {
-
-            mfaError.textContent =
-                "MFA code must contain exactly 6 digits.";
-
-            mfaInput.classList.add("invalid");
-
-            isValid = false;
-
-        } else {
-
-            mfaInput.classList.add("valid");
-        }
+            const username =
+                usernameInput.value.trim();
 
 
-        // STOP IF VALIDATION FAILS
-        if (!isValid) {
-            return;
-        }
+            if (username === "") {
+
+                usernameError.textContent =
+                    "Username or email is required.";
+
+                usernameInput.classList.add(
+                    "invalid"
+                );
+
+                isValid = false;
+
+            } else if (username.length < 3) {
+
+                usernameError.textContent =
+                    "Username or email must be at least 3 characters.";
+
+                usernameInput.classList.add(
+                    "invalid"
+                );
+
+                isValid = false;
+
+            } else {
+
+                usernameInput.classList.add(
+                    "valid"
+                );
+
+            }
 
 
-        // =========================
-        // SEND LOGIN TO SERVER
-        // =========================
+            // =========================
+            // PASSWORD
+            // =========================
 
-        try {
-
-            const response = await fetch(
-                "http://localhost:3000/api/login",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                }
-            );
+            const password =
+                passwordInput.value;
 
 
-            const data = await response.json();
+            if (password === "") {
+
+                passwordError.textContent =
+                    "Password is required.";
+
+                passwordInput.classList.add(
+                    "invalid"
+                );
+
+                isValid = false;
+
+            } else if (password.length < 8) {
+
+                passwordError.textContent =
+                    "Password must be at least 8 characters.";
+
+                passwordInput.classList.add(
+                    "invalid"
+                );
+
+                isValid = false;
+
+            } else {
+
+                passwordInput.classList.add(
+                    "valid"
+                );
+
+            }
 
 
-            // SERVER ERROR
-            if (!response.ok) {
+            // =========================
+            // MFA
+            // =========================
 
-                loginMessage.textContent =
-                    data.message || "Login failed.";
+            const mfaCode =
+                mfaInput.value.trim();
 
-                loginMessage.classList.add("error");
 
+            if (mfaCode === "") {
+
+                mfaError.textContent =
+                    "MFA code is required.";
+
+                mfaInput.classList.add(
+                    "invalid"
+                );
+
+                isValid = false;
+
+            } else if (!/^[0-9]{6}$/.test(mfaCode)) {
+
+                mfaError.textContent =
+                    "MFA code must contain exactly 6 digits.";
+
+                mfaInput.classList.add(
+                    "invalid"
+                );
+
+                isValid = false;
+
+            } else {
+
+                mfaInput.classList.add(
+                    "valid"
+                );
+
+            }
+
+
+            // =========================
+            // STOP IF INVALID
+            // =========================
+
+            if (!isValid) {
                 return;
             }
 
 
-            // LOGIN SUCCESS
-            if (data.success) {
+            // =========================
+            // SEND TO SERVER
+            // =========================
+
+            try {
 
                 loginMessage.textContent =
-                    "Login successful!";
+                    "Logging in...";
 
-                loginMessage.classList.add("success");
-
-
-                // Save logged-in user
-                localStorage.setItem(
-                    "brrmsUser",
-                    JSON.stringify(data.user)
+                loginMessage.classList.add(
+                    "loading"
                 );
 
 
-                // Go to your actual dashboard
-                setTimeout(() => {
+                const response =
+                    await fetch(
+                        "http://localhost:3000/api/login",
+                        {
+                            method: "POST",
 
-                    window.location.href = "index.html";
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
 
-                }, 500);
+                            body: JSON.stringify({
+
+                                username: username,
+
+                                password: password
+
+                            })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                // =========================
+                // LOGIN ERROR
+                // =========================
+
+                if (!response.ok) {
+
+                    loginMessage.textContent =
+                        data.message ||
+                        "Login failed.";
+
+                    loginMessage.className =
+                        "auth-message error";
+
+                    return;
+
+                }
+
+
+                // =========================
+                // SUCCESS
+                // =========================
+
+                if (data.success) {
+
+                    const user =
+                        data.user;
+
+
+                    // Save user information
+
+                    localStorage.setItem(
+                        "brrmsUser",
+                        JSON.stringify(user)
+                    );
+
+
+                    // =========================
+                    // ROLE MESSAGE
+                    // =========================
+
+                    if (
+                        user.role ===
+                        "Administrator"
+                    ) {
+
+                        loginMessage.textContent =
+                            "Login successful! Welcome, Administrator.";
+
+                    }
+
+                    else if (
+                        user.role ===
+                        "Staff"
+                    ) {
+
+                        loginMessage.textContent =
+                            "Login successful! Welcome, Staff.";
+
+                    }
+
+                    else if (
+                        user.role ===
+                        "Barangay Captain"
+                    ) {
+
+                        loginMessage.textContent =
+                            "Login successful! Welcome, Barangay Captain.";
+
+                    }
+
+                    else {
+
+                        loginMessage.textContent =
+                            "Login successful!";
+
+                    }
+
+
+                    loginMessage.className =
+                        "auth-message success";
+
+
+                    // =========================
+                    // DASHBOARD
+                    // =========================
+
+                    setTimeout(() => {
+
+                        window.location.href =
+                            "index.html";
+
+                    }, 800);
+
+                }
 
             }
 
-        } catch (error) {
 
-            console.error("Login error:", error);
+            catch (error) {
 
-            loginMessage.textContent =
-                "Unable to connect to the BRRMS server.";
+                console.error(
+                    "Login error:",
+                    error
+                );
 
-            loginMessage.classList.add("error");
+
+                loginMessage.textContent =
+                    "Unable to connect to the BRRMS server.";
+
+                loginMessage.className =
+                    "auth-message error";
+
+            }
 
         }
-
-    });
+    );
 
 });
