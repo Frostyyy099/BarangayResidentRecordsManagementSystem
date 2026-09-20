@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const usernameError = document.getElementById("usernameError");
     const passwordError = document.getElementById("passwordError");
     const confirmPasswordError = document.getElementById("confirmPasswordError");
-    const mfaCodeError = document.getElementById("mfaError");
+    const mfaCodeError = document.getElementById("mfaCodeError");
 
     const signupMessage = document.getElementById("signupMessage");
 
@@ -429,6 +429,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 username:
                     username.value.trim(),
+
+                email:
+                    email.value.trim(),
 
                 password:
                     password.value

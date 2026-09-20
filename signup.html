@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +15,7 @@
 
         <div class="auth-card">
 
+            <!-- LOGO -->
             <div class="auth-logo">
                 <img src="images/logo.png" alt="BRRMS">
             </div>
@@ -28,122 +28,179 @@
 
             <h2>Sign Up</h2>
 
-            <form id="signupForm">
+            <form id="signupForm" novalidate>
 
                 <!-- FULL NAME -->
                 <div class="form-group">
-                    <label for="fullName">Full Name</label>
+
+                    <label for="fullName">
+                        Full Name
+                    </label>
 
                     <input
                         type="text"
                         id="fullName"
+                        name="fullName"
                         placeholder="Juan Dela Cruz"
-                        minlength="3"
-                        maxlength="100"
                         required
                     >
 
-                    <p id="fullNameError" class="error-message"></p>
+                    <small
+                        class="error-message"
+                        id="fullNameError">
+                    </small>
+
                 </div>
 
 
-                <!-- EMAIL -->
+                <!-- EMAIL ADDRESS -->
                 <div class="form-group">
-                    <label for="email">Email Address</label>
+
+                    <label for="email">
+                        Email Address
+                    </label>
 
                     <input
                         type="email"
                         id="email"
+                        name="email"
                         placeholder="example@email.com"
-                        maxlength="100"
                         required
                     >
 
-                    <p id="emailError" class="error-message"></p>
+                    <small
+                        class="error-message"
+                        id="emailError">
+                    </small>
+
                 </div>
+
+
+
+                </button>
 
 
                 <!-- USERNAME -->
                 <div class="form-group">
-                    <label for="username">Username</label>
+
+                    <label for="username">
+                        Username
+                    </label>
 
                     <input
                         type="text"
                         id="username"
+                        name="username"
                         placeholder="Enter your username"
-                        minlength="3"
-                        maxlength="50"
                         required
                     >
 
-                    <p id="usernameError" class="error-message"></p>
+                    <small
+                        class="error-message"
+                        id="usernameError">
+                    </small>
+
                 </div>
 
 
                 <!-- PASSWORD -->
                 <div class="form-group">
-                    <label for="password">Password</label>
+
+                    <label for="password">
+                        Password
+                    </label>
 
                     <input
                         type="password"
                         id="password"
+                        name="password"
                         placeholder="Create a password"
-                        minlength="8"
                         required
+                        minlength="8"
                     >
 
-                    <p id="passwordError" class="error-message"></p>
+                    <small
+                        class="error-message"
+                        id="passwordError">
+                    </small>
+
                 </div>
 
 
                 <!-- CONFIRM PASSWORD -->
                 <div class="form-group">
-                    <label for="confirmPassword">Confirm Password</label>
+
+                    <label for="confirmPassword">
+                        Confirm Password
+                    </label>
 
                     <input
                         type="password"
                         id="confirmPassword"
+                        name="confirmPassword"
                         placeholder="Confirm your password"
-                        minlength="8"
                         required
+                        minlength="8"
                     >
 
-                    <p id="confirmPasswordError" class="error-message"></p>
+                    <small
+                        class="error-message"
+                        id="confirmPasswordError">
+                    </small>
+
                 </div>
 
 
                 <!-- MFA CODE -->
                 <div class="form-group">
-                    <label for="mfaCode">MFA Code</label>
+
+                    <label for="mfaCode">
+                        MFA Code
+                    </label>
 
                     <input
                         type="text"
                         id="mfaCode"
+                        name="mfaCode"
                         placeholder="Enter 6-digit MFA code"
                         maxlength="6"
                         inputmode="numeric"
-                        pattern="[0-9]{6}"
-                        required
                     >
 
-                    <p id="mfaError" class="error-message"></p>
+                    <small
+                        class="error-message"
+                        id="mfaCodeError">
+                    </small>
+
                 </div>
 
 
-                <!-- BUTTON -->
-                <button type="submit" class="auth-btn">
+                <!-- CREATE ACCOUNT BUTTON -->
+                <button
+                    type="submit"
+                    class="auth-btn">
                     Create Account
                 </button>
 
 
-                <p id="signupMessage" class="auth-message"></p>
+                <!-- SIGNUP MESSAGE -->
+                <p
+                    id="signupMessage"
+                    class="auth-message">
+                </p>
 
             </form>
 
 
+            <!-- LOGIN LINK -->
             <p class="auth-switch">
+
                 Already have an account?
-                <a href="login.html">Login</a>
+
+                <a href="login.html">
+                    Login
+                </a>
+
             </p>
 
         </div>
@@ -151,6 +208,7 @@
     </div>
 
 
+    <!-- SIGNUP JAVASCRIPT -->
     <script src="js/signup.js"></script>
 
 </body>

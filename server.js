@@ -1,14 +1,27 @@
-console.log("BRRMS SERVER STARTED");
+console.log("BRRMS SERVER STARTING...");
 
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+
+let nodemailer = null;
+try {
+    nodemailer = require("nodemailer");
+} catch (error) {
+    console.log(
+        "nodemailer is not installed — email sending disabled, codes will print to this console instead."
+    );
+}
 
 const app = express();
 const PORT = 3000;
 
-app.use(express.static(__dirname));
+// =========================
+// MIDDLEWARE
+// =========================
+
 app.use(cors());
 app.use(express.json());
 
@@ -30,7 +43,108 @@ db.connect((err) => {
     }
 
     console.log("Connected to MySQL database!");
+
+    // Create/update demo accounts
+    setupDemoAccounts();
 });
+
+// =========================
+// EMAIL TRANSPORTER
+// =========================
+// To actually send real emails, set these two environment variables
+// before starting the server (PowerShell example):
+//
+//   $env:EMAIL_USER="youraddress@gmail.com"
+//   $env:EMAIL_PASS="your-16-char-gmail-app-password"
+//   node server.js
+//
+// A Gmail App Password (not your normal password) is required:
+// https://myaccount.google.com/apppasswords
+//
+// If these are not set, the server will NOT attempt to send a real
+// email. Instead it will just print the code to this terminal, so
+// you can still test the flow locally without setting up email yet.
+
+const EMAIL_USER = process.env.EMAIL_USER || null;
+const EMAIL_PASS = process.env.EMAIL_PASS || null;
+const EMAIL_CONFIGURED = Boolean(EMAIL_USER && EMAIL_PASS && nodemailer);
+
+let transporter = null;
+
+if (EMAIL_CONFIGURED) {
+
+    transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS
+        }
+    });
+
+    console.log("Email sending is configured (Gmail).");
+
+} else {
+
+    console.log(
+        "Email sending is NOT configured. Verification codes will be printed to this console instead (dev mode)."
+    );
+
+}
+
+async function sendCodeEmail(toEmail, subject, bodyText) {
+
+    if (!EMAIL_CONFIGURED) {
+        // Dev fallback: nothing to actually send.
+        return { sent: false };
+    }
+
+    try {
+
+        await transporter.sendMail({
+            from: `"BRRMS" <${EMAIL_USER}>`,
+            to: toEmail,
+            subject: subject,
+            text: bodyText
+        });
+
+        return { sent: true };
+
+    } catch (error) {
+
+        console.error("Email send failed:", error.message);
+        return { sent: false };
+
+    }
+}
+
+// =========================
+// VERIFICATION CODE STORAGE
+// =========================
+// Simple in-memory store for one-time codes tied to a user_id.
+// Codes expire after 5 minutes and are cleared once used.
+// NOTE: this resets whenever the server restarts. That's fine for
+// development; for production you'd store this in the database
+// (e.g. a login_codes table) instead.
+
+const CODE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+const loginCodeStore = new Map();
+// loginCodeStore.set(user_id, {
+//     emailCode: "123456",
+//     mfaCode: "654321" or null,
+//     expiresAt: <timestamp>
+// });
+
+// Roles that must also enter an MFA code to log in.
+const MFA_REQUIRED_ROLES = [
+    "Staff",
+    "Barangay Captain",
+    "Administrator"
+];
+
+function generateSixDigitCode() {
+    return crypto.randomInt(100000, 999999).toString();
+}
 
 // =========================
 // TEST ROUTE
@@ -41,109 +155,489 @@ app.get("/", (req, res) => {
 });
 
 // =========================
+// TEMP DEBUG: LIST USERS
+// =========================
+// Visit http://localhost:3000/api/debug/users in your browser to see
+// every account currently in the database. Remove this route before
+// deploying this app anywhere real — it has no authentication and
+// would leak account info to anyone who can reach the server.
+
+app.get("/api/debug/users", (req, res) => {
+
+    const sql = `
+        SELECT user_id, full_name, username, email, role, status
+        FROM users
+    `;
+
+    db.query(sql, (err, results) => {
+
+        if (err) {
+
+            console.error(err);
+
+            return res.status(500).json({
+                success: false,
+                message: "Database error."
+            });
+        }
+
+        return res.json({
+            success: true,
+            users: results
+        });
+
+    });
+
+});
+
+// =========================
+// SETUP DEMO ACCOUNTS
+// =========================
+
+async function setupDemoAccounts() {
+
+    try {
+
+        // -------------------------
+        // ADMINISTRATOR
+        // -------------------------
+
+        await createOrUpdateDemoAccount(
+            "Barangay Administrator",
+            "admin",
+            "admin123",
+            "Administrator",
+            "admin@brrms.local"
+        );
+
+        // -------------------------
+        // STAFF
+        // -------------------------
+
+        await createOrUpdateDemoAccount(
+            "Juan Staff",
+            "staff01",
+            "staff123",
+            "Staff",
+            "staff01@brrms.local"
+        );
+
+        // -------------------------
+        // BARANGAY CAPTAIN
+        // -------------------------
+
+        await createOrUpdateDemoAccount(
+            "Roberto Santos",
+            "captain01",
+            "captain123",
+            "Barangay Captain",
+            "captain01@brrms.local"
+        );
+
+        console.log("Demo accounts are ready!");
+
+    } catch (error) {
+
+        console.error("Demo account setup error:", error.message);
+
+    }
+}
+
+
+// =========================
+// CREATE / UPDATE DEMO ACCOUNT
+// =========================
+
+async function createOrUpdateDemoAccount(
+    fullName,
+    username,
+    plainPassword,
+    role,
+    email
+) {
+
+    return new Promise(async (resolve, reject) => {
+
+        const checkSql = `
+            SELECT user_id, password
+            FROM users
+            WHERE username = ?
+            LIMIT 1
+        `;
+
+        db.query(checkSql, [username], async (err, results) => {
+
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            try {
+
+                const hashedPassword = await bcrypt.hash(
+                    plainPassword,
+                    10
+                );
+
+                // -------------------------
+                // ACCOUNT DOES NOT EXIST
+                // -------------------------
+
+                if (results.length === 0) {
+
+                    const insertSql = `
+                        INSERT INTO users
+                        (
+                            full_name,
+                            username,
+                            password,
+                            role,
+                            email,
+                            status,
+                            date_created
+                        )
+                        VALUES (?, ?, ?, ?, ?, 'Active', CURDATE())
+                    `;
+
+                    db.query(
+                        insertSql,
+                        [
+                            fullName,
+                            username,
+                            hashedPassword,
+                            role,
+                            email
+                        ],
+                        (err) => {
+
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
+
+                            console.log(
+                                `Created ${role} account: ${username}`
+                            );
+
+                            resolve();
+                        }
+                    );
+
+                    return;
+                }
+
+                // -------------------------
+                // ACCOUNT ALREADY EXISTS
+                // -------------------------
+
+                const user = results[0];
+
+                // Check if password is already bcrypt hashed
+                const isBcryptHash =
+                    typeof user.password === "string" &&
+                    user.password.startsWith("$2");
+
+                if (!isBcryptHash) {
+
+                    const updateSql = `
+                        UPDATE users
+                        SET
+                            password = ?,
+                            full_name = ?,
+                            role = ?,
+                            email = COALESCE(email, ?),
+                            status = 'Active'
+                        WHERE username = ?
+                    `;
+
+                    db.query(
+                        updateSql,
+                        [
+                            hashedPassword,
+                            fullName,
+                            role,
+                            email,
+                            username
+                        ],
+                        (err) => {
+
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
+
+                            console.log(
+                                `Updated password for ${username}`
+                            );
+
+                            resolve();
+                        }
+                    );
+
+                } else {
+
+                    // Make sure role/status are correct
+                    const updateSql = `
+                        UPDATE users
+                        SET
+                            full_name = ?,
+                            role = ?,
+                            email = COALESCE(email, ?),
+                            status = 'Active'
+                        WHERE username = ?
+                    `;
+
+                    db.query(
+                        updateSql,
+                        [
+                            fullName,
+                            role,
+                            email,
+                            username
+                        ],
+                        (err) => {
+
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
+
+                            resolve();
+                        }
+                    );
+                }
+
+            } catch (error) {
+
+                reject(error);
+
+            }
+
+        });
+
+    });
+}
+
+
+// =========================
 // SIGN UP
 // =========================
 
 app.post("/api/signup", async (req, res) => {
 
-    const { full_name, username, password } = req.body;
+    const {
+        full_name,
+        username,
+        email,
+        password
+    } = req.body;
 
+    // Required fields
     if (!full_name || !username || !password) {
+
         return res.status(400).json({
             success: false,
-            message: "All fields are required."
+            message: "Full name, username, and password are required."
         });
     }
 
     try {
 
-        const checkSql = "SELECT * FROM users WHERE username = ?";
+        // -------------------------
+        // CHECK USERNAME
+        // -------------------------
 
-        db.query(checkSql, [username], async (err, results) => {
+        const usernameSql = `
+            SELECT user_id
+            FROM users
+            WHERE username = ?
+            LIMIT 1
+        `;
 
-            if (err) {
-                console.error(err);
+        db.query(
+            usernameSql,
+            [username],
+            async (err, results) => {
 
-                return res.status(500).json({
-                    success: false,
-                    message: "Database error."
-                });
-            }
+                if (err) {
 
-            if (results.length > 0) {
-                return res.status(409).json({
-                    success: false,
-                    message: "Username already exists."
-                });
-            }
+                    console.error(err);
 
-            const hashedPassword = await bcrypt.hash(password, 10);
+                    return res.status(500).json({
+                        success: false,
+                        message: "Database error."
+                    });
+                }
 
-            const insertSql = `
-                INSERT INTO users
-                (full_name, username, password, role, date_created)
-                VALUES (?, ?, ?, 'Staff', CURDATE())
-            `;
+                if (results.length > 0) {
 
-            db.query(
-                insertSql,
-                [full_name, username, hashedPassword],
-                (err, result) => {
+                    return res.status(409).json({
+                        success: false,
+                        message: "Username already exists."
+                    });
+                }
 
-                    if (err) {
-                        console.error(err);
+                // -------------------------
+                // CHECK EMAIL
+                // -------------------------
+
+                if (email) {
+
+                    const emailSql = `
+                        SELECT user_id
+                        FROM users
+                        WHERE email = ?
+                        LIMIT 1
+                    `;
+
+                    db.query(
+                        emailSql,
+                        [email],
+                        async (emailErr, emailResults) => {
+
+                            if (emailErr) {
+
+                                console.error(emailErr);
+
+                                return res.status(500).json({
+                                    success: false,
+                                    message: "Database error."
+                                });
+                            }
+
+                            if (emailResults.length > 0) {
+
+                                return res.status(409).json({
+                                    success: false,
+                                    message: "Email already exists."
+                                });
+                            }
+
+                            await createNewUser();
+                        }
+                    );
+
+                } else {
+
+                    await createNewUser();
+
+                }
+
+
+                // =========================
+                // CREATE NEW USER
+                // =========================
+
+                async function createNewUser() {
+
+                    try {
+
+                        const hashedPassword =
+                            await bcrypt.hash(password, 10);
+
+                        const insertSql = `
+                            INSERT INTO users
+                            (
+                                full_name,
+                                username,
+                                password,
+                                email,
+                                role,
+                                status,
+                                date_created
+                            )
+                            VALUES (?, ?, ?, ?, 'Staff', 'Active', CURDATE())
+                        `;
+
+                        db.query(
+                            insertSql,
+                            [
+                                full_name,
+                                username,
+                                hashedPassword,
+                                email || null
+                            ],
+                            (insertErr) => {
+
+                                if (insertErr) {
+
+                                    console.error(insertErr);
+
+                                    return res.status(500).json({
+                                        success: false,
+                                        message:
+                                            "Could not create account."
+                                    });
+                                }
+
+                                return res.status(201).json({
+                                    success: true,
+                                    message:
+                                        "Account created successfully!"
+                                });
+
+                            }
+                        );
+
+                    } catch (error) {
+
+                        console.error(error);
 
                         return res.status(500).json({
                             success: false,
-                            message: "Could not create account."
+                            message: "Server error."
                         });
                     }
-
-                    res.status(201).json({
-                        success: true,
-                        message: "Account created successfully!"
-                    });
-
                 }
-            );
 
-        });
+            }
+        );
 
     } catch (error) {
 
         console.error(error);
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Server error."
         });
+
     }
+
 });
 
+
 // =========================
-// LOGIN
+// SEND LOGIN VERIFICATION CODE(S)
 // =========================
+// Called when the user clicks "Send Verification Code" on the login
+// page. Looks up the account, generates an email verification code
+// (and an MFA code too, if the account's role requires it), stores
+// them for 5 minutes, and emails them.
 
-app.post("/api/login", (req, res) => {
+app.post("/api/login/send-code", (req, res) => {
 
-    const { username, password } = req.body;
+    const { username } = req.body;
 
-    if (!username || !password) {
+    if (!username) {
+
         return res.status(400).json({
             success: false,
-            message: "Username and password are required."
+            message: "Username or email is required."
         });
     }
 
     const sql = `
-        SELECT *
+        SELECT user_id, full_name, username, email, role, status
         FROM users
-        WHERE username = ?
+        WHERE username = ? OR email = ?
+        LIMIT 1
     `;
 
-    db.query(sql, [username], async (err, results) => {
+    db.query(sql, [username, username], async (err, results) => {
 
         if (err) {
+
             console.error(err);
 
             return res.status(500).json({
@@ -153,251 +647,308 @@ app.post("/api/login", (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(401).json({
+
+            return res.status(404).json({
                 success: false,
-                message: "Invalid username or password."
+                message: "No account found with that username or email."
             });
         }
 
         const user = results[0];
 
-        try {
+        if (!user.email) {
 
-            const passwordMatch =
-                await bcrypt.compare(password, user.password);
-
-            if (!passwordMatch) {
-                return res.status(401).json({
-                    success: false,
-                    message: "Invalid username or password."
-                });
-            }
-
-            res.json({
-                success: true,
-                message: "Login successful!",
-                user: {
-                    user_id: user.user_id,
-                    full_name: user.full_name,
-                    username: user.username,
-                    role: user.role
-                }
-            });
-
-        } catch (error) {
-
-            console.error(error);
-
-            res.status(500).json({
+            return res.status(400).json({
                 success: false,
-                message: "Login error."
-            });
-        }
-    });
-});
-
-// =========================
-// GET RESIDENTS
-// =========================
-
-app.get("/api/residents", (req, res) => {
-
-    const sql = `
-        SELECT
-            resident_id,
-            resident_code,
-            full_name,
-            age,
-            address,
-            contact,
-            status,
-            date_added
-        FROM residents
-        ORDER BY resident_id DESC
-    `;
-
-    db.query(sql, (err, results) => {
-
-        if (err) {
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                message: "Failed to retrieve residents."
+                message:
+                    "This account has no email on file, so a code can't be sent."
             });
         }
 
-        res.json(results);
+        const emailCode = generateSixDigitCode();
+
+        const needsMfa =
+            MFA_REQUIRED_ROLES.includes(user.role);
+
+        const mfaCode =
+            needsMfa ? generateSixDigitCode() : null;
+
+        loginCodeStore.set(user.user_id, {
+            emailCode,
+            mfaCode,
+            expiresAt: Date.now() + CODE_EXPIRY_MS
+        });
+
+        const bodyLines = [
+            `Hi ${user.full_name},`,
+            "",
+            `Your BRRMS email verification code is: ${emailCode}`
+        ];
+
+        if (needsMfa) {
+            bodyLines.push(
+                `Your BRRMS MFA code is: ${mfaCode}`
+            );
+        }
+
+        bodyLines.push(
+            "",
+            "These codes expire in 5 minutes. If you didn't request this, you can ignore this email."
+        );
+
+        const { sent } = await sendCodeEmail(
+            user.email,
+            "Your BRRMS login code",
+            bodyLines.join("\n")
+        );
+
+        // Dev convenience: always print codes to the server console
+        // too, in case email isn't configured yet.
+        console.log(
+            `[LOGIN CODE] ${user.username} -> email: ${emailCode}` +
+            (needsMfa ? `, mfa: ${mfaCode}` : "")
+        );
+
+        return res.json({
+            success: true,
+            message: sent
+                ? "Verification code sent to your email."
+                : "Email is not configured on this server yet — check the server console for your code."
+        });
+
     });
+
 });
 
+
 // =========================
-// ADD RESIDENT
+// LOGIN
 // =========================
 
-app.post("/api/residents", (req, res) => {
+app.post("/api/login", (req, res) => {
 
     const {
-        full_name,
-        age,
-        address,
-        contact,
-        status
+        username,
+        password,
+        emailVerificationCode,
+        mfaCode
     } = req.body;
 
-    if (!full_name || !age || !address || !contact || !status) {
+    // -------------------------
+    // REQUIRED FIELDS
+    // -------------------------
+
+    if (!username || !password) {
+
         return res.status(400).json({
             success: false,
-            message: "All resident fields are required."
+            message:
+                "Username/Email and password are required."
         });
     }
 
-    const residentCode =
-        "BRR-" +
-        Date.now().toString().slice(-4);
+    if (!emailVerificationCode) {
 
-    const sql = `
-        INSERT INTO residents
-        (resident_code, full_name, age, address, contact, status, date_added)
-        VALUES (?, ?, ?, ?, ?, ?, CURDATE())
-    `;
-
-    db.query(
-        sql,
-        [
-            residentCode,
-            full_name,
-            age,
-            address,
-            contact,
-            status
-        ],
-        (err, result) => {
-
-            if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to add resident."
-                });
-            }
-
-            res.status(201).json({
-                success: true,
-                message: "Resident added successfully!",
-                resident_id: result.insertId,
-                resident_code: residentCode
-            });
-        }
-    );
-});
-
-// =========================
-// UPDATE RESIDENT
-// =========================
-
-app.put("/api/residents/:id", (req, res) => {
-
-    const residentId = req.params.id;
-
-    const {
-        full_name,
-        age,
-        address,
-        contact,
-        status
-    } = req.body;
-
-    const sql = `
-        UPDATE residents
-        SET
-            full_name = ?,
-            age = ?,
-            address = ?,
-            contact = ?,
-            status = ?
-        WHERE resident_id = ?
-    `;
-
-    db.query(
-        sql,
-        [
-            full_name,
-            age,
-            address,
-            contact,
-            status,
-            residentId
-        ],
-        (err, result) => {
-
-            if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to update resident."
-                });
-            }
-
-            if (result.affectedRows === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Resident not found."
-                });
-            }
-
-            res.json({
-                success: true,
-                message: "Resident updated successfully!"
-            });
-        }
-    );
-});
-
-// =========================
-// DELETE RESIDENT
-// =========================
-
-app.delete("/api/residents/:id", (req, res) => {
-
-    const residentId = req.params.id;
-
-    const sql = `
-        DELETE FROM residents
-        WHERE resident_id = ?
-    `;
-
-    db.query(sql, [residentId], (err, result) => {
-
-        if (err) {
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                message: "Failed to delete resident."
-            });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Resident not found."
-            });
-        }
-
-        res.json({
-            success: true,
-            message: "Resident deleted successfully!"
+        return res.status(400).json({
+            success: false,
+            message:
+                "Email verification code is required."
         });
-    });
+    }
+
+    // -------------------------
+    // FIND USER
+    // -------------------------
+
+    const sql = `
+        SELECT
+            user_id,
+            full_name,
+            username,
+            password,
+            email,
+            role,
+            status
+        FROM users
+        WHERE username = ? OR email = ?
+        LIMIT 1
+    `;
+
+    db.query(
+        sql,
+        [username, username],
+        async (err, results) => {
+
+            if (err) {
+
+                console.error(err);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Database error."
+                });
+            }
+
+            // -------------------------
+            // USER NOT FOUND
+            // -------------------------
+
+            if (results.length === 0) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Invalid username/email or password."
+                });
+            }
+
+            const user = results[0];
+
+            // -------------------------
+            // CHECK ACCOUNT STATUS
+            // -------------------------
+
+            if (user.status !== "Active") {
+
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "This account is inactive."
+                });
+            }
+
+            try {
+
+                // -------------------------
+                // CHECK PASSWORD
+                // -------------------------
+
+                const passwordMatch =
+                    await bcrypt.compare(
+                        password,
+                        user.password
+                    );
+
+                if (!passwordMatch) {
+
+                    return res.status(401).json({
+                        success: false,
+                        message:
+                            "Invalid username/email or password."
+                    });
+                }
+
+                // -------------------------
+                // CHECK VERIFICATION CODE(S)
+                // -------------------------
+
+                const stored =
+                    loginCodeStore.get(user.user_id);
+
+                if (!stored) {
+
+                    return res.status(400).json({
+                        success: false,
+                        message:
+                            "Please request a verification code first."
+                    });
+                }
+
+                if (Date.now() > stored.expiresAt) {
+
+                    loginCodeStore.delete(user.user_id);
+
+                    return res.status(400).json({
+                        success: false,
+                        message:
+                            "Your verification code expired. Please request a new one."
+                    });
+                }
+
+                if (emailVerificationCode !== stored.emailCode) {
+
+                    return res.status(401).json({
+                        success: false,
+                        message:
+                            "Incorrect email verification code."
+                    });
+                }
+
+                const needsMfa =
+                    MFA_REQUIRED_ROLES.includes(user.role);
+
+                if (needsMfa) {
+
+                    if (!mfaCode) {
+
+                        return res.status(400).json({
+                            success: false,
+                            message:
+                                "MFA code is required for this account."
+                        });
+                    }
+
+                    if (mfaCode !== stored.mfaCode) {
+
+                        return res.status(401).json({
+                            success: false,
+                            message:
+                                "Incorrect MFA code."
+                        });
+                    }
+
+                }
+
+                // Codes are one-time use
+                loginCodeStore.delete(user.user_id);
+
+                // -------------------------
+                // LOGIN SUCCESS
+                // -------------------------
+
+                console.log(
+                    `${user.username} logged in as ${user.role}`
+                );
+
+                return res.json({
+                    success: true,
+                    message: "Login successful!",
+
+                    user: {
+                        user_id: user.user_id,
+                        full_name: user.full_name,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                        status: user.status
+                    }
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Login error."
+                });
+
+            }
+
+        }
+    );
+
 });
+
 
 // =========================
 // START SERVER
 // =========================
 
 app.listen(PORT, () => {
-    console.log(`BRRMS server running at http://localhost:${PORT}`);
+
+    console.log(
+        `BRRMS SERVER STARTED on http://localhost:${PORT}`
+    );
+
 });

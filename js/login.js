@@ -13,8 +13,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const passwordInput =
         document.getElementById("password");
 
+    const emailVerificationCodeInput =
+        document.getElementById("emailVerificationCode");
+
     const mfaInput =
         document.getElementById("mfaCode");
+
+    const sendCodeBtn =
+        document.getElementById("sendCodeBtn");
 
 
     const usernameError =
@@ -22,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const passwordError =
         document.getElementById("passwordError");
+
+    const emailVerificationCodeError =
+        document.getElementById("emailVerificationCodeError");
 
     const mfaError =
         document.getElementById("mfaError");
@@ -35,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         usernameError.textContent = "";
         passwordError.textContent = "";
+        emailVerificationCodeError.textContent = "";
         mfaError.textContent = "";
 
         usernameInput.classList.remove(
@@ -47,12 +57,133 @@ document.addEventListener("DOMContentLoaded", () => {
             "valid"
         );
 
+        emailVerificationCodeInput.classList.remove(
+            "invalid",
+            "valid"
+        );
+
         mfaInput.classList.remove(
             "invalid",
             "valid"
         );
 
     }
+
+
+    // =========================
+    // SEND VERIFICATION CODE
+    // =========================
+
+    sendCodeBtn.addEventListener(
+        "click",
+        async () => {
+
+            const username =
+                usernameInput.value.trim();
+
+            if (username === "" || username.length < 3) {
+
+                usernameError.textContent =
+                    "Enter your username or email above first.";
+
+                usernameInput.classList.add(
+                    "invalid"
+                );
+
+                return;
+
+            }
+
+            const originalText =
+                sendCodeBtn.textContent;
+
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.textContent = "Sending...";
+
+            loginMessage.textContent = "";
+            loginMessage.className = "auth-message";
+
+            try {
+
+                const response = await fetch(
+                    "http://localhost:3000/api/login/send-code",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            username: username
+                        })
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    loginMessage.textContent =
+                        data.message ||
+                        "Unable to send verification code.";
+
+                    loginMessage.className =
+                        "auth-message error";
+
+                } else {
+
+                    loginMessage.textContent =
+                        data.message ||
+                        "Verification code sent to your email.";
+
+                    loginMessage.className =
+                        "auth-message success";
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Send code error:",
+                    error
+                );
+
+                loginMessage.textContent =
+                    "Unable to connect to the BRRMS server.";
+
+                loginMessage.className =
+                    "auth-message error";
+
+            } finally {
+
+                // Simple cooldown so the user can't spam-click
+                let secondsLeft = 30;
+
+                const interval = setInterval(() => {
+
+                    sendCodeBtn.textContent =
+                        `Resend in ${secondsLeft}s`;
+
+                    secondsLeft -= 1;
+
+                    if (secondsLeft < 0) {
+
+                        clearInterval(interval);
+
+                        sendCodeBtn.disabled = false;
+                        sendCodeBtn.textContent = originalText;
+
+                    }
+
+                }, 1000);
+
+            }
+
+        }
+    );
 
 
     // =========================
@@ -155,7 +286,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
             // =========================
-            // MFA
+            // EMAIL VERIFICATION CODE
+            // =========================
+
+            const emailVerificationCode =
+                emailVerificationCodeInput.value.trim();
+
+
+            if (emailVerificationCode === "") {
+
+                emailVerificationCodeError.textContent =
+                    "Email verification code is required.";
+
+                emailVerificationCodeInput.classList.add(
+                    "invalid"
+                );
+
+                isValid = false;
+
+            } else if (!/^[0-9]{6}$/.test(emailVerificationCode)) {
+
+                emailVerificationCodeError.textContent =
+                    "Verification code must contain exactly 6 digits.";
+
+                emailVerificationCodeInput.classList.add(
+                    "invalid"
+                );
+
+                isValid = false;
+
+            } else {
+
+                emailVerificationCodeInput.classList.add(
+                    "valid"
+                );
+
+            }
+
+
+            // =========================
+            // MFA CODE
             // =========================
 
             const mfaCode =
@@ -231,7 +401,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                                 username: username,
 
-                                password: password
+                                password: password,
+
+                                emailVerificationCode: emailVerificationCode,
+
+                                mfaCode: mfaCode
 
                             })
                         }
@@ -325,13 +499,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                     // =========================
-                    // DASHBOARD
+                    // WELCOME PAGE
                     // =========================
 
                     setTimeout(() => {
 
                         window.location.href =
-                            "index.html";
+                            "welcome.html";
 
                     }, 800);
 

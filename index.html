@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="en">
 
     <head>
@@ -8,6 +8,39 @@
         <title>BRRMS - Barangay Resident Records Management System</title>
 
         <link rel="stylesheet" href="css/style.css">
+
+        <style>
+            .row-actions {
+                display: flex;
+                gap: 6px;
+                white-space: nowrap;
+            }
+            .row-edit-btn,
+            .row-delete-btn {
+                border: none;
+                border-radius: 6px;
+                width: 30px;
+                height: 30px;
+                cursor: pointer;
+                font-size: 14px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: opacity 0.15s ease;
+            }
+            .row-edit-btn {
+                background: #e6f0ff;
+                color: #1a56db;
+            }
+            .row-delete-btn {
+                background: #fde8e8;
+                color: #c81e1e;
+            }
+            .row-edit-btn:hover,
+            .row-delete-btn:hover {
+                opacity: 0.75;
+            }
+        </style>
     </head>
 
     <body>
@@ -96,13 +129,13 @@
                         ♧
                     </div>
 
-                    <div class="profile-circle">
+                    <div class="profile-circle" id="profileInitials">
                         BS
                     </div>
 
                     <div class="profile-text">
-                        <strong>Barangay Staff</strong>
-                        <small>Administrator</small>
+                        <strong id="profileName">Barangay Staff</strong>
+                        <small id="profileRole">Administrator</small>
                     </div>
 
                     <span class="arrow">⌄</span>
@@ -120,7 +153,7 @@
 
                 <div class="hero-content">
 
-                    <div class="greeting">
+                    <div class="greeting" id="heroGreeting">
                         GOOD MORNING, STAFF!
                     </div>
 
@@ -142,7 +175,7 @@
 
             <!-- ================= DASHBOARD CONTENT ================= -->
 
-            <section class="dashboard-content">
+            <section class="dashboard-content" id="mainDashboardContent">
 
 
                 <!-- STATISTICS -->
@@ -312,8 +345,10 @@
                                 <th>Age</th>
                                 <th>Address</th>
                                 <th>Contact</th>
+                                <th>Email</th>
                                 <th>Status</th>
                                 <th>Date Added</th>
+                                <th>Actions</th>
                             </tr>
 
                         </thead>
@@ -357,47 +392,6 @@
                             </thead>
 
                             <tbody id="officialTable">
-
-                                <tr>
-                                    <td>OFF-001</td>
-                                    <td>Roberto Santos</td>
-                                    <td>Barangay Captain</td>
-                                    <td>0917-123-4567</td>
-                                    <td>2023–2026</td>
-                                </tr>
-
-                                <tr>
-                                    <td>OFF-002</td>
-                                    <td>Elena Cruz</td>
-                                    <td>Kagawad</td>
-                                    <td>0918-234-5678</td>
-                                    <td>2023–2026</td>
-                                </tr>
-
-                                <tr>
-                                    <td>OFF-003</td>
-                                    <td>Mark Reyes</td>
-                                    <td>Kagawad</td>
-                                    <td>0919-345-6789</td>
-                                    <td>2023–2026</td>
-                                </tr>
-
-                                <tr>
-                                    <td>OFF-004</td>
-                                    <td>Linda Garcia</td>
-                                    <td>Secretary</td>
-                                    <td>0920-456-7890</td>
-                                    <td>2023–2026</td>
-                                </tr>
-
-                                <tr>
-                                    <td>OFF-005</td>
-                                    <td>Joseph Dela Cruz</td>
-                                    <td>Treasurer</td>
-                                    <td>0921-567-8901</td>
-                                    <td>2023–2026</td>
-                                </tr>
-
                             </tbody>
 
                         </table>
@@ -536,47 +530,6 @@
                             </thead>
 
                             <tbody id="certificateTable">
-
-                                <tr>
-                                    <td>CERT-001</td>
-                                    <td>Juan Dela Cruz</td>
-                                    <td>Certificate of Residency</td>
-                                    <td>Aug. 15, 2026</td>
-                                    <td>Employment</td>
-                                </tr>
-
-                                <tr>
-                                    <td>CERT-002</td>
-                                    <td>Maria Santos</td>
-                                    <td>Barangay Clearance</td>
-                                    <td>Aug. 16, 2026</td>
-                                    <td>Employment</td>
-                                </tr>
-
-                                <tr>
-                                    <td>CERT-003</td>
-                                    <td>Pedro Garcia</td>
-                                    <td>Certificate of Indigency</td>
-                                    <td>Aug. 17, 2026</td>
-                                    <td>Financial Assistance</td>
-                                </tr>
-
-                                <tr>
-                                    <td>CERT-004</td>
-                                    <td>Ana Reyes</td>
-                                    <td>Certificate of Residency</td>
-                                    <td>Aug. 18, 2026</td>
-                                    <td>School Requirement</td>
-                                </tr>
-
-                                <tr>
-                                    <td>CERT-005</td>
-                                    <td>Carlo Mendoza</td>
-                                    <td>Barangay Clearance</td>
-                                    <td>Aug. 19, 2026</td>
-                                    <td>Business Requirement</td>
-                                </tr>
-
                             </tbody>
 
                         </table>
@@ -585,6 +538,59 @@
 
                 </div>
 
+
+            </section>
+
+
+            <!-- ================= FULL RESIDENTS PAGE ================= -->
+
+            <section class="dashboard-content" id="residentsPage" style="display: none;">
+
+                <div class="recent-header">
+
+                    <h2>All Residents</h2>
+
+                    <span id="residentsPageCount" style="font-size: 13px; color: #6b7280;">
+                        0 of 0 residents
+                    </span>
+
+                </div>
+
+                <div style="margin: 12px 0 20px;">
+                    <input
+                        type="text"
+                        id="residentsPageSearch"
+                        placeholder="Search by name, address, contact, or email..."
+                        style="width: 100%; max-width: 420px; padding: 10px 14px; border: 1px solid #d7dce3; border-radius: 8px; font-size: 14px;"
+                    >
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>ID</th>
+                                <th>Resident Name</th>
+                                <th>Age</th>
+                                <th>Address</th>
+                                <th>Contact</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Date Added</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="residentsPageTable">
+                        </tbody>
+
+                    </table>
+
+                </div>
 
             </section>
 
@@ -625,6 +631,13 @@
                                 required>
                             <small class="field-error" id="residentContactError"></small>
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="residentEmail">Email Address</label>
+                        <input type="email" id="residentEmail" name="email"
+                            placeholder="juandelacruz@email.com"
+                            maxlength="100">
+                        <small class="field-error" id="residentEmailError"></small>
                     </div>
                     <div class="form-group">
                         <label for="residentAddress">Address</label>
@@ -767,17 +780,17 @@
                     ×
                 </button>
 
-                <h2>Search Resident</h2>
+                <h2>Search Records</h2>
 
                 <p>
-                    Search by name, address, or contact number.
+                    Search residents, officials, or certificates by name, position, contact, or type.
                 </p>
 
                 <input
                     type="text"
                     id="searchInput"
                     class="search-input"
-                    placeholder="Type resident name..."
+                    placeholder="Type a name, position, or keyword..."
                 >
 
                 <div id="searchResults"></div>

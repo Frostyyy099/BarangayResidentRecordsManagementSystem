@@ -5,6 +5,109 @@
 
 
 /* =========================
+   SESSION CHECK
+   ========================= */
+
+const loggedInUser =
+    JSON.parse(localStorage.getItem("brrmsUser"));
+
+
+if (!loggedInUser) {
+
+    window.location.href = "login.html";
+
+}
+
+
+/* =========================
+   PERSONALIZE HEADER
+   ========================= */
+
+function personalizeHeader() {
+
+    if (!loggedInUser) {
+
+        return;
+
+    }
+
+
+    const nameEl =
+        document.getElementById("profileName");
+
+    const roleEl =
+        document.getElementById("profileRole");
+
+    const initialsEl =
+        document.getElementById("profileInitials");
+
+    const greetingEl =
+        document.getElementById("heroGreeting");
+
+
+    if (nameEl) {
+
+        nameEl.textContent =
+            loggedInUser.full_name || "Barangay Staff";
+
+    }
+
+
+    if (roleEl) {
+
+        roleEl.textContent =
+            loggedInUser.role || "Staff";
+
+    }
+
+
+    if (initialsEl && loggedInUser.full_name) {
+
+        const initials =
+            loggedInUser.full_name
+                .split(" ")
+                .filter(Boolean)
+                .slice(0, 2)
+                .map(function(part) {
+
+                    return part[0].toUpperCase();
+
+                })
+                .join("");
+
+        initialsEl.textContent =
+            initials || "BS";
+
+    }
+
+
+    if (greetingEl) {
+
+        const hour =
+            new Date().getHours();
+
+        const timeGreeting =
+            hour < 12 ? "GOOD MORNING" :
+            hour < 18 ? "GOOD AFTERNOON" :
+            "GOOD EVENING";
+
+        const firstName =
+            (loggedInUser.full_name || "STAFF")
+                .split(" ")[0]
+                .toUpperCase();
+
+        greetingEl.textContent =
+            `${timeGreeting}, ${firstName}!`;
+
+    }
+
+}
+
+
+personalizeHeader();
+
+
+/* =========================
    DATA
    ========================= */
 
@@ -121,6 +224,20 @@ function updateDashboard() {
 
     renderTable();
 
+
+    const residentsPageSearch =
+        document.getElementById(
+            "residentsPageSearch"
+        );
+
+    if (residentsPageSearch) {
+
+        renderResidentsPage(
+            residentsPageSearch.value
+        );
+
+    }
+
 }
 
 
@@ -128,16 +245,65 @@ function updateDashboard() {
    RENDER RESIDENT TABLE
    ========================= */
 
-function renderTable() {
+function buildResidentRow(resident) {
 
-    residentTable.innerHTML = "";
+    const row =
+        document.createElement("tr");
 
 
-    if (residents.length === 0) {
+    row.innerHTML = `
 
-        residentTable.innerHTML = `
+        <td>${resident.id}</td>
+
+        <td>
+            <strong>${resident.name}</strong>
+        </td>
+
+        <td>${resident.age}</td>
+
+        <td>${resident.address}</td>
+
+        <td>${resident.contact}</td>
+
+        <td>${resident.email || "—"}</td>
+
+        <td>
+            <span class="status">
+                ${resident.status}
+            </span>
+        </td>
+
+        <td>
+            ${resident.dateAdded}
+        </td>
+
+        <td class="row-actions">
+            <button type="button" class="row-edit-btn" data-id="${resident.id}" title="Edit">
+                ✎
+            </button>
+            <button type="button" class="row-delete-btn" data-id="${resident.id}" title="Delete">
+                🗑
+            </button>
+        </td>
+
+    `;
+
+
+    return row;
+
+}
+
+
+function renderResidentsInto(tableBody, list) {
+
+    tableBody.innerHTML = "";
+
+
+    if (list.length === 0) {
+
+        tableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="empty-row">
+                <td colspan="9" class="empty-row">
                     No resident records yet.
                 </td>
             </tr>
@@ -147,50 +313,249 @@ function renderTable() {
     }
 
 
+    list.forEach(function(resident) {
+
+        tableBody.appendChild(
+            buildResidentRow(resident)
+        );
+
+    });
+
+}
+
+
+function renderTable() {
+
     const recentResidents =
         [...residents]
         .reverse()
         .slice(0, 10);
 
 
-    recentResidents.forEach(function(resident) {
-
-        const row =
-            document.createElement("tr");
-
-
-        row.innerHTML = `
-
-            <td>${resident.id}</td>
-
-            <td>
-                <strong>${resident.name}</strong>
-            </td>
-
-            <td>${resident.age}</td>
-
-            <td>${resident.address}</td>
-
-            <td>${resident.contact}</td>
-
-            <td>
-                <span class="status">
-                    ${resident.status}
-                </span>
-            </td>
-
-            <td>
-                ${resident.dateAdded}
-            </td>
-
-        `;
-
-
-        residentTable.appendChild(row);
-
-    });
+    renderResidentsInto(
+        residentTable,
+        recentResidents
+    );
 
 }
+
+
+function renderResidentsPage(filterKeyword) {
+
+    const pageTable =
+        document.getElementById(
+            "residentsPageTable"
+        );
+
+    if (!pageTable) {
+
+        return;
+
+    }
+
+
+    const keyword =
+        (filterKeyword || "")
+        .toLowerCase()
+        .trim();
+
+
+    const list =
+        [...residents]
+        .reverse()
+        .filter(function(resident) {
+
+            if (keyword === "") {
+
+                return true;
+
+            }
+
+
+            return (
+
+                resident.name
+                    .toLowerCase()
+                    .includes(keyword)
+
+                ||
+
+                resident.address
+                    .toLowerCase()
+                    .includes(keyword)
+
+                ||
+
+                resident.contact
+                    .toLowerCase()
+                    .includes(keyword)
+
+                ||
+
+                (resident.email || "")
+                    .toLowerCase()
+                    .includes(keyword)
+
+            );
+
+        });
+
+
+    renderResidentsInto(
+        pageTable,
+        list
+    );
+
+
+    const countEl =
+        document.getElementById(
+            "residentsPageCount"
+        );
+
+    if (countEl) {
+
+        countEl.textContent =
+            `${list.length} of ${residents.length} residents`;
+
+    }
+
+}
+
+
+/* =========================
+   OPEN EDIT RESIDENT MODAL
+   ========================= */
+
+function openEditModal(id) {
+
+    const resident =
+        residents.find(function(item) {
+
+            return item.id === id;
+
+        });
+
+
+    if (!resident) {
+
+        return;
+
+    }
+
+
+    document.getElementById("editId").value =
+        resident.id;
+
+    document.getElementById("residentName").value =
+        resident.name;
+
+    document.getElementById("residentAge").value =
+        resident.age;
+
+    document.getElementById("residentContact").value =
+        resident.contact;
+
+    document.getElementById("residentEmail").value =
+        resident.email || "";
+
+    document.getElementById("residentAddress").value =
+        resident.address;
+
+    document.getElementById("residentStatus").value =
+        resident.status;
+
+    document.getElementById("modalTitle").textContent =
+        "Edit Resident";
+
+    residentModal.classList.add("show");
+
+}
+
+
+/* =========================
+   DELETE RESIDENT
+   ========================= */
+
+function deleteResident(id) {
+
+    const resident =
+        residents.find(function(item) {
+
+            return item.id === id;
+
+        });
+
+
+    if (!resident) {
+
+        return;
+
+    }
+
+
+    const confirmDelete =
+        confirm(
+            `Delete ${resident.name}'s record? This cannot be undone.`
+        );
+
+
+    if (!confirmDelete) {
+
+        return;
+
+    }
+
+
+    residents =
+        residents.filter(function(item) {
+
+            return item.id !== id;
+
+        });
+
+
+    saveData();
+
+    updateDashboard();
+
+}
+
+
+/* =========================
+   ROW ACTION BUTTONS
+   (event delegation, since
+   rows are re-rendered often)
+   ========================= */
+
+function handleResidentRowClick(event) {
+
+    const editBtn =
+        event.target.closest(".row-edit-btn");
+
+    const deleteBtn =
+        event.target.closest(".row-delete-btn");
+
+
+    if (editBtn) {
+
+        openEditModal(editBtn.dataset.id);
+
+    }
+
+
+    if (deleteBtn) {
+
+        deleteResident(deleteBtn.dataset.id);
+
+    }
+
+}
+
+
+residentTable.addEventListener(
+    "click",
+    handleResidentRowClick
+);
 
 
 /* =========================
@@ -265,6 +630,12 @@ residentForm.addEventListener(
             .trim();
 
 
+        const email =
+            document.getElementById("residentEmail")
+            .value
+            .trim();
+
+
         const status =
             document.getElementById("residentStatus")
             .value;
@@ -299,6 +670,8 @@ residentForm.addEventListener(
 
                 resident.contact = contact;
 
+                resident.email = email;
+
                 resident.status = status;
 
             }
@@ -323,6 +696,8 @@ residentForm.addEventListener(
                 address: address,
 
                 contact: contact,
+
+                email: email,
 
                 status: status,
 
@@ -391,7 +766,23 @@ document
                 .trim();
 
 
-            const results =
+            const container =
+                document.getElementById(
+                    "searchResults"
+                );
+
+
+            container.innerHTML = "";
+
+
+            if (!keyword) {
+
+                return;
+
+            }
+
+
+            const residentMatches =
                 residents.filter(function(resident) {
 
                     return (
@@ -412,34 +803,82 @@ document
                             .toLowerCase()
                             .includes(keyword)
 
+                        ||
+
+                        (resident.email || "")
+                            .toLowerCase()
+                            .includes(keyword)
+
                     );
 
                 });
 
 
-            const container =
-                document.getElementById(
-                    "searchResults"
-                );
+            const officialMatches =
+                officials.filter(function(official) {
+
+                    return (
+
+                        official.name
+                            .toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        official.position
+                            .toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        official.contact
+                            .toLowerCase()
+                            .includes(keyword)
+
+                    );
+
+                });
 
 
-            container.innerHTML = "";
+            const certificateMatches =
+                certificates.filter(function(certificate) {
+
+                    return (
+
+                        certificate.resident
+                            .toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        certificate.type
+                            .toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        certificate.purpose
+                            .toLowerCase()
+                            .includes(keyword)
+
+                    );
+
+                });
 
 
-            if (!keyword) {
+            const totalMatches =
+                residentMatches.length +
+                officialMatches.length +
+                certificateMatches.length;
 
-                return;
 
-            }
-
-
-            if (results.length === 0) {
+            if (totalMatches === 0) {
 
                 container.innerHTML = `
                     <div class="search-result">
 
                         <strong>
-                            No resident found
+                            No matches found
                         </strong>
 
                         <span>
@@ -454,7 +893,9 @@ document
             }
 
 
-            results.forEach(function(resident) {
+            /* ===== RESIDENTS ===== */
+
+            residentMatches.forEach(function(resident) {
 
                 const result =
                     document.createElement("div");
@@ -467,7 +908,10 @@ document
                 result.innerHTML = `
 
                     <strong>
-                        ${resident.name}
+                        🧑 ${resident.name}
+                        <span style="font-weight: normal; font-size: 12px; color: #6b7280;">
+                            — Resident
+                        </span>
                     </strong>
 
                     <span>
@@ -480,7 +924,89 @@ document
 
                         Contact: ${resident.contact}<br>
 
+                        Email: ${resident.email || "—"}<br>
+
                         Status: ${resident.status}
+
+                    </span>
+
+                `;
+
+
+                container.appendChild(result);
+
+            });
+
+
+            /* ===== OFFICIALS ===== */
+
+            officialMatches.forEach(function(official) {
+
+                const result =
+                    document.createElement("div");
+
+
+                result.className =
+                    "search-result";
+
+
+                result.innerHTML = `
+
+                    <strong>
+                        🏛️ ${official.name}
+                        <span style="font-weight: normal; font-size: 12px; color: #6b7280;">
+                            — Barangay Official
+                        </span>
+                    </strong>
+
+                    <span>
+
+                        ID: ${official.id}<br>
+
+                        Position: ${official.position}<br>
+
+                        Contact: ${official.contact}<br>
+
+                        Term: ${official.term}
+
+                    </span>
+
+                `;
+
+
+                container.appendChild(result);
+
+            });
+
+
+            /* ===== CERTIFICATES ===== */
+
+            certificateMatches.forEach(function(certificate) {
+
+                const result =
+                    document.createElement("div");
+
+
+                result.className =
+                    "search-result";
+
+
+                result.innerHTML = `
+
+                    <strong>
+                        📄 ${certificate.resident}
+                        <span style="font-weight: normal; font-size: 12px; color: #6b7280;">
+                            — ${certificate.type}
+                        </span>
+                    </strong>
+
+                    <span>
+
+                        ID: ${certificate.id}<br>
+
+                        Date Issued: ${certificate.date}<br>
+
+                        Purpose: ${certificate.purpose}
 
                     </span>
 
@@ -767,19 +1293,23 @@ navigationButtons.forEach(
                     );
 
 
-                if (page === "residents") {
+                if (page === "residents" || page === "records") {
 
-                    alert(
-                        "Residents section selected.\n\n" +
-                        "Use the Add Resident or Search Records buttons to manage residents."
-                    );
+                    dashboardContentSection.style.display = "none";
 
-                }
+                    residentsPageSection.style.display = "block";
 
+                    document.getElementById(
+                        "residentsPageSearch"
+                    ).value = "";
 
-                if (page === "records") {
+                    renderResidentsPage("");
 
-                    openSearch();
+                } else {
+
+                    dashboardContentSection.style.display = "block";
+
+                    residentsPageSection.style.display = "none";
 
                 }
 
@@ -797,6 +1327,25 @@ navigationButtons.forEach(
 );
 
 
+const dashboardContentSection =
+    document.getElementById("mainDashboardContent");
+
+const residentsPageSection =
+    document.getElementById("residentsPage");
+
+
+document
+    .getElementById("residentsPageSearch")
+    .addEventListener(
+        "input",
+        function() {
+
+            renderResidentsPage(this.value);
+
+        }
+    );
+
+
 /* =========================
    VIEW ALL
    ========================= */
@@ -807,7 +1356,32 @@ document
         "click",
         function() {
 
-            openSearch();
+            document
+                .querySelectorAll(".side-link, .top-link")
+                .forEach(function(item) {
+
+                    item.classList.remove("active");
+
+                });
+
+            document
+                .querySelectorAll('[data-page="residents"]')
+                .forEach(function(item) {
+
+                    item.classList.add("active");
+
+                });
+
+
+            dashboardContentSection.style.display = "none";
+
+            residentsPageSection.style.display = "block";
+
+            document.getElementById(
+                "residentsPageSearch"
+            ).value = "";
+
+            renderResidentsPage("");
 
         }
     );
@@ -831,9 +1405,9 @@ document
 
             if (confirmLogout) {
 
-                alert(
-                    "You have been logged out."
-                );
+                localStorage.removeItem("brrmsUser");
+
+                window.location.href = "login.html";
 
             }
 
@@ -846,6 +1420,82 @@ document
    ADD BARANGAY OFFICIAL
    Corresponds to barangay_officials table
    ========================================================= */
+
+const defaultOfficials = [
+    { id: "OFF-001", name: "Roberto Santos", position: "Barangay Captain", contact: "0917-123-4567", term: "2023-2026" },
+    { id: "OFF-002", name: "Elena Cruz", position: "Kagawad", contact: "0918-234-5678", term: "2023-2026" },
+    { id: "OFF-003", name: "Mark Reyes", position: "Kagawad", contact: "0919-345-6789", term: "2023-2026" },
+    { id: "OFF-004", name: "Linda Garcia", position: "Secretary", contact: "0920-456-7890", term: "2023-2026" },
+    { id: "OFF-005", name: "Joseph Dela Cruz", position: "Treasurer", contact: "0921-567-8901", term: "2023-2026" }
+];
+
+let officials =
+    JSON.parse(localStorage.getItem("brrmsOfficials")) || defaultOfficials;
+
+
+function saveOfficialsData() {
+
+    localStorage.setItem(
+        "brrmsOfficials",
+        JSON.stringify(officials)
+    );
+
+}
+
+
+function renderOfficialsTable() {
+
+    officialTable.innerHTML = "";
+
+
+    if (officials.length === 0) {
+
+        officialTable.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-row">
+                    No officials recorded yet.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    officials.forEach(function(official) {
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML = `
+
+            <td>${official.id}</td>
+
+            <td>${official.name}</td>
+
+            <td>${official.position}</td>
+
+            <td>${official.contact}</td>
+
+            <td>${official.term}</td>
+
+        `;
+
+        officialTable.appendChild(row);
+
+    });
+
+}
+
+
+function generateOfficialID() {
+
+    return "OFF-" +
+        String(officials.length + 1)
+        .padStart(3, "0");
+
+}
 
 const officialModal =
     document.getElementById("officialModal");
@@ -871,6 +1521,8 @@ if (
     officialTable
 ) {
 
+    renderOfficialsTable();
+
 
     /* OPEN FORM */
 
@@ -879,6 +1531,9 @@ if (
         function() {
 
             officialForm.reset();
+
+            document.getElementById("officialCode").value =
+                generateOfficialID();
 
             officialModal.classList.add("show");
 
@@ -982,28 +1637,19 @@ if (
                     .trim();
 
 
-            /* CREATE TABLE ROW */
+            /* SAVE TO ARRAY + LOCAL STORAGE */
 
-            const row =
-                document.createElement("tr");
+            officials.push({
+                id: code,
+                name: name,
+                position: position,
+                contact: contact,
+                term: term
+            });
 
+            saveOfficialsData();
 
-            row.innerHTML = `
-
-                <td>${code}</td>
-
-                <td>${name}</td>
-
-                <td>${position}</td>
-
-                <td>${contact}</td>
-
-                <td>${term}</td>
-
-            `;
-
-
-            officialTable.appendChild(row);
+            renderOfficialsTable();
 
 
             /* RESET */
@@ -1031,6 +1677,82 @@ if (
    ADD BARANGAY CERTIFICATE
    Corresponds to certificates table
    ========================================================= */
+
+const defaultCertificates = [
+    { id: "CERT-001", resident: "Juan Dela Cruz", type: "Certificate of Residency", date: "Aug 15, 2026", purpose: "Employment" },
+    { id: "CERT-002", resident: "Maria Santos", type: "Barangay Clearance", date: "Aug 16, 2026", purpose: "Employment" },
+    { id: "CERT-003", resident: "Pedro Garcia", type: "Certificate of Indigency", date: "Aug 17, 2026", purpose: "Financial Assistance" },
+    { id: "CERT-004", resident: "Ana Reyes", type: "Certificate of Residency", date: "Aug 18, 2026", purpose: "School Requirement" },
+    { id: "CERT-005", resident: "Carlo Mendoza", type: "Barangay Clearance", date: "Aug 19, 2026", purpose: "Business Requirement" }
+];
+
+let certificates =
+    JSON.parse(localStorage.getItem("brrmsCertificates")) || defaultCertificates;
+
+
+function saveCertificatesData() {
+
+    localStorage.setItem(
+        "brrmsCertificates",
+        JSON.stringify(certificates)
+    );
+
+}
+
+
+function renderCertificatesTable() {
+
+    certificateTable.innerHTML = "";
+
+
+    if (certificates.length === 0) {
+
+        certificateTable.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-row">
+                    No certificates recorded yet.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    certificates.forEach(function(certificate) {
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML = `
+
+            <td>${certificate.id}</td>
+
+            <td>${certificate.resident}</td>
+
+            <td>${certificate.type}</td>
+
+            <td>${certificate.date}</td>
+
+            <td>${certificate.purpose}</td>
+
+        `;
+
+        certificateTable.appendChild(row);
+
+    });
+
+}
+
+
+function generateCertificateID() {
+
+    return "CERT-" +
+        String(certificates.length + 1)
+        .padStart(3, "0");
+
+}
 
 const certificateModal =
     document.getElementById(
@@ -1066,6 +1788,8 @@ if (
     certificateTable
 ) {
 
+    renderCertificatesTable();
+
 
     /* OPEN FORM */
 
@@ -1074,6 +1798,9 @@ if (
         function() {
 
             certificateForm.reset();
+
+            document.getElementById("certificateCode").value =
+                generateCertificateID();
 
             certificateModal.classList.add(
                 "show"
@@ -1197,28 +1924,19 @@ if (
                 );
 
 
-            /* CREATE TABLE ROW */
+            /* SAVE TO ARRAY + LOCAL STORAGE */
 
-            const row =
-                document.createElement("tr");
+            certificates.push({
+                id: code,
+                resident: resident,
+                type: type,
+                date: formattedDate,
+                purpose: purpose
+            });
 
+            saveCertificatesData();
 
-            row.innerHTML = `
-
-                <td>${code}</td>
-
-                <td>${resident}</td>
-
-                <td>${type}</td>
-
-                <td>${formattedDate}</td>
-
-                <td>${purpose}</td>
-
-            `;
-
-
-            certificateTable.appendChild(row);
+            renderCertificatesTable();
 
 
             /* RESET FORM */
