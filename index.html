@@ -9,14 +9,27 @@
 
         <link rel="stylesheet" href="css/style.css">
 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
         <style>
+             tr.row-editing {
+            background: #fff7e0;
+            box-shadow: inset 3px 0 0 #f5b301;
+        }
+        [data-theme="dark"] tr.row-editing {
+            background: rgba(245, 179, 1, 0.12);
+            box-shadow: inset 3px 0 0 #f5b301;
+        }
             .row-actions {
                 display: flex;
                 gap: 6px;
                 white-space: nowrap;
             }
             .row-edit-btn,
-            .row-delete-btn {
+            .row-delete-btn,
+            .row-qr-btn,
+            .row-print-btn {
                 border: none;
                 border-radius: 6px;
                 width: 30px;
@@ -36,9 +49,87 @@
                 background: #fde8e8;
                 color: #c81e1e;
             }
+            .row-qr-btn {
+                background: #eef3e9;
+                color: #2f7a3d;
+            }
+            .row-print-btn {
+                background: #f3ecff;
+                color: #6b21a8;
+            }
             .row-edit-btn:hover,
-            .row-delete-btn:hover {
+            .row-delete-btn:hover,
+            .row-qr-btn:hover,
+            .row-print-btn:hover {
                 opacity: 0.75;
+            }
+
+            /* Task 8: subtle highlight on the row
+               currently open in the Edit modal */
+            tr.row-editing {
+                background: #fff7e0;
+                box-shadow: inset 3px 0 0 #f5b301;
+            }
+            [data-theme="dark"] tr.row-editing {
+                background: rgba(245, 179, 1, 0.12);
+                box-shadow: inset 3px 0 0 #f5b301;
+            }
+
+            .activity-feed {
+                max-height: 320px;
+                overflow-y: auto;
+            }
+            .activity-item {
+                display: flex;
+                gap: 10px;
+                padding: 10px 0;
+                border-bottom: 1px solid #eef0f3;
+                font-size: 13.5px;
+            }
+            .activity-item:last-child {
+                border-bottom: none;
+            }
+            .activity-icon {
+                flex-shrink: 0;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                background: #eef3ff;
+            }
+            .activity-text strong {
+                color: #12203b;
+            }
+            .activity-time {
+                display: block;
+                font-size: 11.5px;
+                color: #9aa2af;
+                margin-top: 2px;
+            }
+
+            .report-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+            .report-card {
+                background: #fff;
+                border: 1px solid #eef0f3;
+                border-radius: 12px;
+                padding: 20px;
+            }
+            .report-card h3 {
+                margin: 0 0 14px;
+                font-size: 15px;
+                color: #12203b;
+            }
+            @media (max-width: 900px) {
+                .report-grid {
+                    grid-template-columns: 1fr;
+                }
             }
         </style>
     </head>
@@ -123,7 +214,10 @@
                 </nav>
 
 
-                <div class="staff-profile">
+                <div class="staff-profile" id="staffProfileBtn" style="cursor: pointer;" title="Edit profile">
+
+                    <button type="button" class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+                    </button>
 
                     <div class="notification">
                         ♧
@@ -361,6 +455,28 @@
                 </div>
 
 
+                <!-- ================= RECENT ACTIVITY ================= -->
+
+                <div class="recent-header" style="margin-top: 30px;">
+
+                    <h2>Recent Activity</h2>
+
+                </div>
+
+                <div class="table-container" style="padding: 8px 20px;">
+
+                    <div class="activity-feed" id="activityFeed">
+                        <div class="activity-item">
+                            <div class="activity-icon">🕓</div>
+                            <div class="activity-text">
+                                No activity yet.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
                 <!-- ================= BARANGAY OFFICIALS ================= -->
 
                 <div class="additional-table-section">
@@ -387,6 +503,7 @@
                                     <th>Position</th>
                                     <th>Contact Number</th>
                                     <th>Term</th>
+                                    <th>Actions</th>
                                 </tr>
 
                             </thead>
@@ -409,6 +526,10 @@
 
                         <h2>Barangay Document Requests</h2>
 
+                        <button id="addRequestBtn" style="background:#2563eb; color:#fff; border:none; padding:9px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+                            + Add Request
+                        </button>
+
                     </div>
 
 
@@ -424,72 +545,12 @@
                                     <th>Document Type</th>
                                     <th>Date Requested</th>
                                     <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
 
                             </thead>
 
-                            <tbody>
-
-                                <tr>
-                                    <td>REQ-001</td>
-                                    <td>Juan Dela Cruz</td>
-                                    <td>Barangay Clearance</td>
-                                    <td>Aug. 18, 2026</td>
-                                    <td>
-                                        <span class="status completed-status">
-                                            Completed
-                                        </span>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td>REQ-002</td>
-                                    <td>Maria Santos</td>
-                                    <td>Certificate of Residency</td>
-                                    <td>Aug. 18, 2026</td>
-                                    <td>
-                                        <span class="status pending-status">
-                                            Pending
-                                        </span>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td>REQ-003</td>
-                                    <td>Pedro Garcia</td>
-                                    <td>Barangay Indigency</td>
-                                    <td>Aug. 19, 2026</td>
-                                    <td>
-                                        <span class="status completed-status">
-                                            Completed
-                                        </span>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td>REQ-004</td>
-                                    <td>Ana Reyes</td>
-                                    <td>Barangay Clearance</td>
-                                    <td>Aug. 19, 2026</td>
-                                    <td>
-                                        <span class="status processing-status">
-                                            Processing
-                                        </span>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td>REQ-005</td>
-                                    <td>Carlo Mendoza</td>
-                                    <td>Certificate of Residency</td>
-                                    <td>Aug. 20, 2026</td>
-                                    <td>
-                                        <span class="status pending-status">
-                                            Pending
-                                        </span>
-                                    </td>
-                                </tr>
-
+                            <tbody id="requestTable">
                             </tbody>
 
                         </table>
@@ -525,6 +586,7 @@
                                     <th>Certificate Type</th>
                                     <th>Date Issued</th>
                                     <th>Purpose</th>
+                                    <th>Actions</th>
                                 </tr>
 
                             </thead>
@@ -556,13 +618,22 @@
 
                 </div>
 
-                <div style="margin: 12px 0 20px;">
+                <div style="margin: 12px 0 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
                     <input
                         type="text"
                         id="residentsPageSearch"
                         placeholder="Search by name, address, contact, or email..."
-                        style="width: 100%; max-width: 420px; padding: 10px 14px; border: 1px solid #d7dce3; border-radius: 8px; font-size: 14px;"
+                        style="flex: 1; min-width: 260px; max-width: 420px; padding: 10px 14px; border: 1px solid #d7dce3; border-radius: 8px; font-size: 14px;"
                     >
+                    <input
+                        type="text"
+                        id="qrLookupInput"
+                        placeholder="📷 Scan or type a Resident ID code..."
+                        style="flex: 1; min-width: 260px; max-width: 340px; padding: 10px 14px; border: 1px solid #d7dce3; border-radius: 8px; font-size: 14px;"
+                    >
+                    <button type="button" id="qrLookupBtn" style="padding: 10px 16px; border: none; border-radius: 8px; background: #2f7a3d; color: #fff; font-size: 14px; cursor: pointer;">
+                        Look Up
+                    </button>
                 </div>
 
                 <div class="table-container">
@@ -589,6 +660,41 @@
                         </tbody>
 
                     </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= REPORTS PAGE ================= -->
+
+            <section class="dashboard-content" id="reportsPage" style="display: none;">
+
+                <div class="recent-header">
+                    <h2>Reports & Statistics</h2>
+                </div>
+
+                <div class="report-grid" style="margin-top: 16px;">
+
+                    <div class="report-card">
+                        <h3>Residents by Status</h3>
+                        <canvas id="statusChart" height="220"></canvas>
+                    </div>
+
+                    <div class="report-card">
+                        <h3>Residents by Age Group</h3>
+                        <canvas id="ageChart" height="220"></canvas>
+                    </div>
+
+                    <div class="report-card">
+                        <h3>Officials by Position</h3>
+                        <canvas id="positionChart" height="220"></canvas>
+                    </div>
+
+                    <div class="report-card">
+                        <h3>Certificates by Type</h3>
+                        <canvas id="certChart" height="220"></canvas>
+                    </div>
 
                 </div>
 
@@ -661,12 +767,62 @@
         </div>
 
         <!-- ================= TASK 5: ADD OFFICIAL MODAL ================= -->
+        <!-- ================= DOCUMENT REQUEST MODAL ================= -->
+        <div class="modal" id="requestModal">
+            <div class="modal-box">
+                <button type="button" class="close-btn" id="closeRequest">×</button>
+                <h2 id="requestModalTitle">Add Document Request</h2>
+                <p>Enter the request information below.</p>
+                <form id="requestForm">
+                    <input type="hidden" id="requestEditId">
+                    <div class="form-group">
+                        <label for="requestResident">Resident Name</label>
+                        <input type="text" id="requestResident" name="resident_name" placeholder="Juan Dela Cruz"
+                            minlength="3" maxlength="100"
+                            pattern="[A-Za-zÀ-ÿ .'-]+"
+                            title="Enter a valid name using letters, spaces, apostrophes, periods, or hyphens."
+                            required>
+                        <small class="field-error" id="requestResidentError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="requestType">Document Type</label>
+                        <select id="requestType" name="document_type" required>
+                            <option value="">Select Document Type</option>
+                            <option>Barangay Clearance</option>
+                            <option>Certificate of Residency</option>
+                            <option>Barangay Indigency</option>
+                            <option>Certificate of Good Moral Character</option>
+                            <option>Business Permit Endorsement</option>
+                        </select>
+                        <small class="field-error" id="requestTypeError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="requestDate">Date Requested</label>
+                        <input type="date" id="requestDate" name="date_requested" required>
+                        <small class="field-error" id="requestDateError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="requestStatus">Status</label>
+                        <select id="requestStatus" name="status" required>
+                            <option value="">Select Status</option>
+                            <option>Pending</option>
+                            <option>Processing</option>
+                            <option>Completed</option>
+                        </select>
+                        <small class="field-error" id="requestStatusError"></small>
+                    </div>
+                    <button type="submit" class="save-btn">Save Request</button>
+                </form>
+            </div>
+        </div>
+
         <div class="modal" id="officialModal">
             <div class="modal-box">
                 <button type="button" class="close-btn" id="closeOfficial">×</button>
-                <h2>Add Barangay Official</h2>
+                <h2 id="officialModalTitle">Add Barangay Official</h2>
                 <p>Enter the official's information below.</p>
                 <form id="officialForm">
+                    <input type="hidden" id="officialEditId" name="editId" value="">
                     <div class="form-group">
                         <label for="officialCode">Official Code</label>
                         <input type="text" id="officialCode" name="official_code" placeholder="OFF-006"
@@ -714,7 +870,68 @@
                             required>
                         <small class="field-error" id="officialTermError"></small>
                     </div>
-                    <button type="submit" class="save-btn">Add Official</button>
+                    <button type="submit" class="save-btn" id="officialSaveBtn">Add Official</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= QR CODE MODAL ================= -->
+        <div class="modal" id="qrModal">
+            <div class="modal-box" style="text-align: center; max-width: 320px;">
+                <button type="button" class="close-btn" id="closeQr">×</button>
+                <h2 style="margin-bottom: 4px;">Resident QR Code</h2>
+                <p id="qrResidentName" style="margin-bottom: 16px; color: #6b7280;"></p>
+                <div id="qrCodeCanvas" style="display: flex; justify-content: center; margin-bottom: 16px;"></div>
+                <p style="font-size: 12.5px; color: #9aa2af;">
+                    Scan this code with any QR scanner, or copy the ID below into the
+                    "Scan or type a Resident ID code" box on the Residents page.
+                </p>
+                <p id="qrResidentId" style="font-weight: bold; font-size: 15px; margin-top: 8px;"></p>
+            </div>
+        </div>
+
+        <!-- ================= EDIT PROFILE MODAL ================= -->
+        <div class="modal" id="profileModal">
+            <div class="modal-box">
+                <button type="button" class="close-btn" id="closeProfile">×</button>
+                <h2>Edit Profile</h2>
+                <p>Update your account information. Leave the password fields blank to keep your current password.</p>
+                <form id="profileForm" novalidate>
+                    <div class="form-group">
+                        <label for="profileFullName">Full Name</label>
+                        <input type="text" id="profileFullName" name="full_name" placeholder="Juan Dela Cruz"
+                            minlength="3" maxlength="100"
+                            pattern="[A-Za-zÀ-ÿ .'-]+"
+                            title="Enter a valid name using letters, spaces, apostrophes, periods, or hyphens."
+                            required>
+                        <small class="field-error" id="profileFullNameError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="profileEmail">Email Address</label>
+                        <input type="email" id="profileEmail" name="email" placeholder="you@email.com"
+                            maxlength="100">
+                        <small class="field-error" id="profileEmailError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="profileUsername">Username</label>
+                        <input type="text" id="profileUsername" name="username" disabled
+                            title="Username can't be changed here.">
+                    </div>
+                    <div class="form-group">
+                        <label for="profileNewPassword">New Password (optional)</label>
+                        <input type="password" id="profileNewPassword" name="new_password"
+                            placeholder="Leave blank to keep current password"
+                            minlength="8">
+                        <small class="field-error" id="profileNewPasswordError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="profileConfirmPassword">Confirm New Password</label>
+                        <input type="password" id="profileConfirmPassword" name="confirm_new_password"
+                            placeholder="Re-enter new password">
+                        <small class="field-error" id="profileConfirmPasswordError"></small>
+                    </div>
+                    <button type="submit" class="save-btn" id="profileSaveBtn">Save Changes</button>
+                    <p id="profileMessage" style="text-align: center; margin-top: 12px; min-height: 18px; font-size: 13px;"></p>
                 </form>
             </div>
         </div>
@@ -723,9 +940,10 @@
         <div class="modal" id="certificateModal">
             <div class="modal-box">
                 <button type="button" class="close-btn" id="closeCertificate">×</button>
-                <h2>Add Barangay Certificate</h2>
+                <h2 id="certificateModalTitle">Add Barangay Certificate</h2>
                 <p>Enter the certificate information below.</p>
                 <form id="certificateForm">
+                    <input type="hidden" id="certificateEditId" name="editId" value="">
                     <div class="form-group">
                         <label for="certificateCode">Certificate Code</label>
                         <input type="text" id="certificateCode" name="certificate_code" placeholder="CERT-006"
@@ -765,7 +983,7 @@
                                 minlength="3" maxlength="255" rows="3" required></textarea>
                         <small class="field-error" id="certificatePurposeError"></small>
                     </div>
-                    <button type="submit" class="save-btn">Add Certificate</button>
+                    <button type="submit" class="save-btn" id="certificateSaveBtn">Add Certificate</button>
                 </form>
             </div>
         </div>
@@ -803,6 +1021,8 @@
         <!-- ================= JAVASCRIPT ================= -->
 
         <script src="js/script.js"></script>
+
+    <div id="toastContainer"></div>
 
     </body>
 

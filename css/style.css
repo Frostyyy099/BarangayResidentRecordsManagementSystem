@@ -1307,3 +1307,236 @@ tbody tr:last-child td {
     color: #137a4b;
     border-color: #c9f0dc;
 }
+
+/* =========================================
+   ENHANCEMENTS
+   Toasts, page transitions, dark mode,
+   empty states, activity feed, reports
+   ========================================= */
+
+
+/* ===== PAGE TRANSITIONS ===== */
+
+.dashboard-content {
+    animation: pageFadeIn 0.35s ease;
+}
+
+@keyframes pageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card,
+.action-card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 26px rgba(20,54,91,0.14);
+}
+
+.action-card:hover {
+    transform: translateY(-3px);
+}
+
+
+/* ===== TOAST NOTIFICATIONS ===== */
+
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    min-width: 260px;
+    max-width: 340px;
+    background: white;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 14px 34px rgba(20,54,91,0.22);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12.5px;
+    color: #263a52;
+    border-left: 4px solid #2563eb;
+    animation: toastIn 0.25s ease, toastOut 0.25s ease 2.6s forwards;
+    pointer-events: auto;
+}
+
+.toast.success { border-left-color: #12a86b; }
+.toast.error   { border-left-color: #e0483e; }
+.toast.info    { border-left-color: #2563eb; }
+
+.toast .toast-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.toast .toast-text strong {
+    display: block;
+    font-size: 12.5px;
+    margin-bottom: 2px;
+    color: #102a4c;
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+    from { opacity: 1; }
+    to   { opacity: 0; transform: translateX(30px); }
+}
+
+
+/* ===== EMPTY STATES ===== */
+
+.empty-row {
+    text-align: center;
+    padding: 40px 20px;
+    color: #8da0b4;
+}
+
+.empty-state-icon {
+    font-size: 26px;
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+
+
+/* ===== DARK MODE TOGGLE SWITCH ===== */
+
+.theme-toggle {
+    width: 42px;
+    height: 24px;
+    border-radius: 999px;
+    background: #d9e2ec;
+    position: relative;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.theme-toggle::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+    transition: transform 0.2s ease;
+}
+
+[data-theme="dark"] .theme-toggle {
+    background: #2563eb;
+}
+
+[data-theme="dark"] .theme-toggle::after {
+    transform: translateX(18px);
+}
+
+
+/* ===== DARK MODE ===== */
+
+[data-theme="dark"] body {
+    background: #0e1620;
+    color: #dbe4ee;
+}
+
+[data-theme="dark"] .main-content {
+    background: #0e1620;
+}
+
+[data-theme="dark"] .top-navigation {
+    background: rgba(20, 30, 45, 0.92);
+}
+
+[data-theme="dark"] .top-link {
+    color: #c7d2e0;
+}
+
+[data-theme="dark"] .top-link:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .action-card,
+[data-theme="dark"] .table-container,
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .report-card,
+[data-theme="dark"] .toast {
+    background: #161f2c;
+    color: #dbe4ee;
+    box-shadow: 0 7px 20px rgba(0,0,0,0.35);
+}
+
+[data-theme="dark"] .stat-card strong,
+[data-theme="dark"] .section-title h2,
+[data-theme="dark"] .recent-header h2,
+[data-theme="dark"] .greeting,
+[data-theme="dark"] .toast .toast-text strong,
+[data-theme="dark"] .report-card h3 {
+    color: #eef3fa;
+}
+
+[data-theme="dark"] .stat-card span,
+[data-theme="dark"] .stat-card small,
+[data-theme="dark"] .profile-text small {
+    color: #93a3b8;
+}
+
+[data-theme="dark"] thead {
+    background: #161f2c;
+}
+
+[data-theme="dark"] th {
+    color: #93a3b8;
+    border-bottom-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] td {
+    color: #c3cedd;
+    border-bottom-color: rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] tbody tr:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+[data-theme="dark"] .action-card {
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea,
+[data-theme="dark"] #residentsPageSearch,
+[data-theme="dark"] #qrLookupInput {
+    background: #0e1620;
+    color: #dbe4ee;
+    border-color: rgba(255,255,255,0.12);
+}
+
+[data-theme="dark"] .empty-row {
+    color: #62728a;
+}

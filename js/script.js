@@ -108,6 +108,619 @@ personalizeHeader();
 
 
 /* =========================
+   EDIT PROFILE
+   (updates the real MySQL
+   users table via server.js)
+   ========================= */
+
+const profileModal =
+    document.getElementById("profileModal");
+
+const profileForm =
+    document.getElementById("profileForm");
+
+const staffProfileBtn =
+    document.getElementById("staffProfileBtn");
+
+const closeProfile =
+    document.getElementById("closeProfile");
+
+const profileMessage =
+    document.getElementById("profileMessage");
+
+
+if (
+    profileModal &&
+    profileForm &&
+    staffProfileBtn &&
+    closeProfile
+) {
+
+    function openProfileModal() {
+
+        if (!loggedInUser) {
+
+            return;
+
+        }
+
+        profileForm.reset();
+
+        profileMessage.textContent = "";
+
+        document.getElementById("profileFullName").value =
+            loggedInUser.full_name || "";
+
+        document.getElementById("profileEmail").value =
+            loggedInUser.email || "";
+
+        document.getElementById("profileUsername").value =
+            loggedInUser.username || "";
+
+        profileModal.classList.add("show");
+
+    }
+
+
+    /* OPEN — but ignore clicks on the theme toggle
+       or notification icon inside the same header area */
+
+    staffProfileBtn.addEventListener(
+        "click",
+        function(event) {
+
+            if (event.target.closest("#themeToggle")) {
+
+                return;
+
+            }
+
+            if (event.target.closest(".notification")) {
+
+                return;
+
+            }
+
+            openProfileModal();
+
+        }
+    );
+
+
+    /* CLOSE */
+
+    closeProfile.addEventListener(
+        "click",
+        function() {
+
+            profileModal.classList.remove("show");
+
+        }
+    );
+
+
+    profileModal.addEventListener(
+        "click",
+        function(event) {
+
+            if (event.target === profileModal) {
+
+                profileModal.classList.remove("show");
+
+            }
+
+        }
+    );
+
+
+    /* SUBMIT — validate, then PUT to the real backend */
+
+    profileForm.addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+            profileMessage.textContent = "";
+
+
+            const fullNameInput =
+                document.getElementById("profileFullName");
+
+            const emailInput =
+                document.getElementById("profileEmail");
+
+            const newPasswordInput =
+                document.getElementById("profileNewPassword");
+
+            const confirmPasswordInput =
+                document.getElementById("profileConfirmPassword");
+
+
+            let isValid = true;
+
+
+            /* Full name */
+
+            if (
+                fullNameInput.value.trim().length < 3 ||
+                !/^[A-Za-zÀ-ÿ .'-]+$/.test(fullNameInput.value.trim())
+            ) {
+
+                document.getElementById("profileFullNameError").textContent =
+                    "Enter a valid full name (letters, spaces, apostrophes, periods, hyphens).";
+
+                fullNameInput.classList.add("invalid");
+
+                isValid = false;
+
+            } else {
+
+                document.getElementById("profileFullNameError").textContent = "";
+
+                fullNameInput.classList.remove("invalid");
+
+            }
+
+
+            /* Email (optional, but must be valid if provided) */
+
+            const emailValue =
+                emailInput.value.trim();
+
+            if (
+                emailValue &&
+                !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(emailValue)
+            ) {
+
+                document.getElementById("profileEmailError").textContent =
+                    "Enter a valid email address.";
+
+                emailInput.classList.add("invalid");
+
+                isValid = false;
+
+            } else {
+
+                document.getElementById("profileEmailError").textContent = "";
+
+                emailInput.classList.remove("invalid");
+
+            }
+
+
+            /* New password (optional, but if provided must meet
+               length + match confirmation) */
+
+            const newPassword =
+                newPasswordInput.value;
+
+            const confirmPassword =
+                confirmPasswordInput.value;
+
+            if (newPassword || confirmPassword) {
+
+                if (newPassword.length < 8) {
+
+                    document.getElementById("profileNewPasswordError").textContent =
+                        "New password must be at least 8 characters.";
+
+                    newPasswordInput.classList.add("invalid");
+
+                    isValid = false;
+
+                } else {
+
+                    document.getElementById("profileNewPasswordError").textContent = "";
+
+                    newPasswordInput.classList.remove("invalid");
+
+                }
+
+                if (newPassword !== confirmPassword) {
+
+                    document.getElementById("profileConfirmPasswordError").textContent =
+                        "Passwords do not match.";
+
+                    confirmPasswordInput.classList.add("invalid");
+
+                    isValid = false;
+
+                } else {
+
+                    document.getElementById("profileConfirmPasswordError").textContent = "";
+
+                    confirmPasswordInput.classList.remove("invalid");
+
+                }
+
+            }
+
+
+            if (!isValid) {
+
+                return;
+
+            }
+
+
+            /* SEND TO SERVER */
+
+            const saveBtn =
+                document.getElementById("profileSaveBtn");
+
+            const originalBtnText =
+                saveBtn.textContent;
+
+            saveBtn.disabled = true;
+
+            saveBtn.textContent = "Saving...";
+
+            profileMessage.textContent = "Saving changes...";
+
+            profileMessage.style.color = "#6b7280";
+
+
+            fetch(
+                `http://localhost:3000/api/users/${loggedInUser.user_id}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        full_name: fullNameInput.value.trim(),
+                        email: emailValue || null,
+                        password: newPassword || undefined
+                    })
+                }
+            )
+                .then(function(response) {
+
+                    return response.json().then(function(data) {
+
+                        return { ok: response.ok, data: data };
+
+                    });
+
+                })
+                .then(function(result) {
+
+                    saveBtn.disabled = false;
+
+                    saveBtn.textContent = originalBtnText;
+
+
+                    if (!result.ok || !result.data.success) {
+
+                        profileMessage.textContent =
+                            result.data.message || "Could not update profile.";
+
+                        profileMessage.style.color = "#c81e1e";
+
+                        return;
+
+                    }
+
+
+                    /* Update the local session so the header,
+                       and any future page load, show the new info */
+
+                    const updatedUser =
+                        Object.assign(
+                            {},
+                            loggedInUser,
+                            result.data.user
+                        );
+
+                    localStorage.setItem(
+                        "brrmsUser",
+                        JSON.stringify(updatedUser)
+                    );
+
+                    loggedInUser.full_name = updatedUser.full_name;
+
+                    loggedInUser.email = updatedUser.email;
+
+
+                    personalizeHeader();
+
+                    profileMessage.textContent =
+                        "Profile updated successfully!";
+
+                    profileMessage.style.color = "#2f7a3d";
+
+                    profileForm.querySelector(
+                        "#profileNewPassword"
+                    ).value = "";
+
+                    profileForm.querySelector(
+                        "#profileConfirmPassword"
+                    ).value = "";
+
+
+                    if (typeof showToast === "function") {
+
+                        showToast(
+                            "success",
+                            "Profile Updated",
+                            "Your account information has been saved."
+                        );
+
+                    }
+
+
+                    setTimeout(function() {
+
+                        profileModal.classList.remove("show");
+
+                    }, 900);
+
+                })
+                .catch(function(error) {
+
+                    console.error("Profile update error:", error);
+
+                    saveBtn.disabled = false;
+
+                    saveBtn.textContent = originalBtnText;
+
+                    profileMessage.textContent =
+                        "Unable to connect to the BRRMS server. Make sure server.js is running.";
+
+                    profileMessage.style.color = "#c81e1e";
+
+                });
+
+        }
+    );
+
+}
+
+
+/* =========================
+   ACTIVITY LOG (audit trail)
+   ========================= */
+
+let activityLog =
+    JSON.parse(localStorage.getItem("brrmsActivityLog")) || [];
+
+
+function logActivity(icon, text) {
+
+    const actor =
+        (loggedInUser && loggedInUser.full_name) ||
+        "Someone";
+
+
+    activityLog.unshift({
+        icon: icon,
+        text: `${actor} ${text}`,
+        time: new Date().toISOString()
+    });
+
+
+    // Keep the log from growing forever
+    if (activityLog.length > 50) {
+
+        activityLog = activityLog.slice(0, 50);
+
+    }
+
+
+    localStorage.setItem(
+        "brrmsActivityLog",
+        JSON.stringify(activityLog)
+    );
+
+
+    renderActivityLog();
+
+}
+
+
+function timeAgo(isoString) {
+
+    const seconds =
+        Math.floor(
+            (Date.now() - new Date(isoString).getTime()) / 1000
+        );
+
+
+    if (seconds < 60) return "just now";
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+
+}
+
+
+function renderActivityLog() {
+
+    const feed =
+        document.getElementById("activityFeed");
+
+    if (!feed) {
+
+        return;
+
+    }
+
+
+    if (activityLog.length === 0) {
+
+        feed.innerHTML = `
+            <div class="activity-item">
+                <div class="activity-icon">🕓</div>
+                <div class="activity-text">
+                    No activity yet.
+                </div>
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    feed.innerHTML = "";
+
+
+    activityLog.slice(0, 15).forEach(function(entry) {
+
+        const item =
+            document.createElement("div");
+
+        item.className = "activity-item";
+
+        item.innerHTML = `
+
+            <div class="activity-icon">${entry.icon}</div>
+
+            <div class="activity-text">
+
+                ${entry.text}
+
+                <span class="activity-time">
+                    ${timeAgo(entry.time)}
+                </span>
+
+            </div>
+
+        `;
+
+        feed.appendChild(item);
+
+    });
+
+}
+
+
+renderActivityLog();
+
+
+/* =========================
+   TOAST NOTIFICATIONS
+   ========================= */
+
+function showToast(type, title, message) {
+
+    const container =
+        document.getElementById("toastContainer");
+
+    if (!container) {
+
+        return;
+
+    }
+
+
+    const icons = {
+        success: "✅",
+        error: "⚠️",
+        info: "ℹ️"
+    };
+
+
+    const toast =
+        document.createElement("div");
+
+    toast.className = `toast ${type}`;
+
+    toast.innerHTML = `
+
+        <div class="toast-icon">${icons[type] || icons.info}</div>
+
+        <div class="toast-text">
+            <strong>${title}</strong>
+            ${message || ""}
+        </div>
+
+    `;
+
+
+    container.appendChild(toast);
+
+
+    setTimeout(function() {
+
+        toast.remove();
+
+    }, 3000);
+
+}
+
+
+/* =========================
+   DARK MODE TOGGLE
+   ========================= */
+
+const themeToggle =
+    document.getElementById("themeToggle");
+
+
+function applyTheme(theme) {
+
+    if (theme === "dark") {
+
+        document.documentElement.setAttribute(
+            "data-theme",
+            "dark"
+        );
+
+    } else {
+
+        document.documentElement.removeAttribute(
+            "data-theme"
+        );
+
+    }
+
+}
+
+
+const savedTheme =
+    localStorage.getItem("brrmsTheme") || "light";
+
+applyTheme(savedTheme);
+
+
+if (themeToggle) {
+
+    themeToggle.addEventListener(
+        "click",
+        function() {
+
+            const isDark =
+                document.documentElement.getAttribute(
+                    "data-theme"
+                ) === "dark";
+
+            const newTheme =
+                isDark ? "light" : "dark";
+
+            applyTheme(newTheme);
+
+            localStorage.setItem(
+                "brrmsTheme",
+                newTheme
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
    DATA
    ========================= */
 
@@ -278,6 +891,9 @@ function buildResidentRow(resident) {
         </td>
 
         <td class="row-actions">
+            <button type="button" class="row-qr-btn" data-id="${resident.id}" title="QR Code">
+                ▦
+            </button>
             <button type="button" class="row-edit-btn" data-id="${resident.id}" title="Edit">
                 ✎
             </button>
@@ -304,6 +920,7 @@ function renderResidentsInto(tableBody, list) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="9" class="empty-row">
+                    <span class="empty-state-icon">🧑‍🤝‍🧑</span>
                     No resident records yet.
                 </td>
             </tr>
@@ -473,6 +1090,170 @@ function openEditModal(id) {
 
 
 /* =========================
+   QR CODE MODAL
+   ========================= */
+
+const qrModal =
+    document.getElementById("qrModal");
+
+const qrCodeCanvas =
+    document.getElementById("qrCodeCanvas");
+
+
+function openQrModal(id) {
+
+    const resident =
+        residents.find(function(item) {
+
+            return item.id === id;
+
+        });
+
+
+    if (!resident) {
+
+        return;
+
+    }
+
+
+    document.getElementById("qrResidentName").textContent =
+        resident.name;
+
+    document.getElementById("qrResidentId").textContent =
+        resident.id;
+
+
+    // Clear any previously generated QR code
+    qrCodeCanvas.innerHTML = "";
+
+
+    // QRCode.js (loaded via CDN in index.html)
+    if (typeof QRCode !== "undefined") {
+
+        new QRCode(qrCodeCanvas, {
+            text: resident.id,
+            width: 180,
+            height: 180
+        });
+
+    } else {
+
+        qrCodeCanvas.innerHTML =
+            "<p style='color:#c81e1e;'>QR library failed to load.</p>";
+
+    }
+
+
+    qrModal.classList.add("show");
+
+}
+
+
+if (qrModal) {
+
+    document
+        .getElementById("closeQr")
+        .addEventListener("click", function() {
+
+            qrModal.classList.remove("show");
+
+        });
+
+
+    qrModal.addEventListener("click", function(event) {
+
+        if (event.target === qrModal) {
+
+            qrModal.classList.remove("show");
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   QR / CODE LOOKUP
+   ========================= */
+
+const qrLookupBtn =
+    document.getElementById("qrLookupBtn");
+
+const qrLookupInput =
+    document.getElementById("qrLookupInput");
+
+
+function performQrLookup() {
+
+    const code =
+        qrLookupInput.value.trim();
+
+
+    if (!code) {
+
+        return;
+
+    }
+
+
+    const resident =
+        residents.find(function(item) {
+
+            return item.id.toLowerCase() ===
+                code.toLowerCase();
+
+        });
+
+
+    if (!resident) {
+
+        showToast(
+            "error",
+            "Not Found",
+            `No resident found with ID "${code}".`
+        );
+
+        return;
+
+    }
+
+
+    qrLookupInput.value = "";
+
+    openEditModal(resident.id);
+
+}
+
+
+if (qrLookupBtn) {
+
+    qrLookupBtn.addEventListener(
+        "click",
+        performQrLookup
+    );
+
+
+    qrLookupInput.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                performQrLookup();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================
    DELETE RESIDENT
    ========================= */
 
@@ -514,6 +1295,12 @@ function deleteResident(id) {
         });
 
 
+    logActivity(
+        "🗑",
+        `deleted resident <strong>${resident.name}</strong>`
+    );
+
+
     saveData();
 
     updateDashboard();
@@ -535,6 +1322,9 @@ function handleResidentRowClick(event) {
     const deleteBtn =
         event.target.closest(".row-delete-btn");
 
+    const qrBtn =
+        event.target.closest(".row-qr-btn");
+
 
     if (editBtn) {
 
@@ -546,6 +1336,13 @@ function handleResidentRowClick(event) {
     if (deleteBtn) {
 
         deleteResident(deleteBtn.dataset.id);
+
+    }
+
+
+    if (qrBtn) {
+
+        openQrModal(qrBtn.dataset.id);
 
     }
 
@@ -674,6 +1471,11 @@ residentForm.addEventListener(
 
                 resident.status = status;
 
+                logActivity(
+                    "✎",
+                    `updated resident <strong>${name}</strong>`
+                );
+
             }
 
         }
@@ -717,6 +1519,11 @@ residentForm.addEventListener(
 
             residents.push(newResident);
 
+            logActivity(
+                "🧑",
+                `added new resident <strong>${name}</strong>`
+            );
+
         }
 
 
@@ -727,10 +1534,12 @@ residentForm.addEventListener(
         closeResidentModal();
 
 
-        alert(
+        showToast(
+            "success",
+            editId ? "Resident Updated" : "Resident Added",
             editId
-                ? "Resident information updated successfully!"
-                : "Resident successfully added!"
+                ? "Their information has been updated successfully."
+                : "The new resident record has been saved."
         );
 
     }
@@ -1029,8 +1838,10 @@ function updateResident() {
 
     if (residents.length === 0) {
 
-        alert(
-            "There are no residents to update."
+        showToast(
+            "info",
+            "No Residents",
+            "There are no residents to update yet."
         );
 
         return;
@@ -1065,8 +1876,10 @@ function updateResident() {
 
     if (!resident) {
 
-        alert(
-            "Resident not found."
+        showToast(
+            "error",
+            "Not Found",
+            "No resident matched that name."
         );
 
         return;
@@ -1111,40 +1924,181 @@ function updateResident() {
    REPORTS
    ========================= */
 
-function showReports() {
+let statusChartInstance = null;
+let ageChartInstance = null;
+let positionChartInstance = null;
+let certChartInstance = null;
 
-    const total =
-        residents.length;
+
+function renderReports() {
+
+    if (typeof Chart === "undefined") {
+
+        return;
+
+    }
 
 
-    const active =
-        residents.filter(function(resident) {
+    /* ===== RESIDENTS BY STATUS ===== */
 
-            return resident.status === "Active";
+    const activeCount =
+        residents.filter(function(r) {
+            return r.status === "Active";
+        }).length;
 
+    const inactiveCount =
+        residents.filter(function(r) {
+            return r.status === "Inactive";
         }).length;
 
 
-    const inactive =
-        residents.filter(function(resident) {
+    if (statusChartInstance) {
+        statusChartInstance.destroy();
+    }
 
-            return resident.status === "Inactive";
+    statusChartInstance = new Chart(
+        document.getElementById("statusChart"),
+        {
+            type: "doughnut",
+            data: {
+                labels: ["Active", "Inactive"],
+                datasets: [{
+                    data: [activeCount, inactiveCount],
+                    backgroundColor: ["#22c55e", "#ef4444"]
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: "bottom" }
+                }
+            }
+        }
+    );
 
-        }).length;
+
+    /* ===== RESIDENTS BY AGE GROUP ===== */
+
+    const ageGroups = {
+        "0-17": 0,
+        "18-30": 0,
+        "31-50": 0,
+        "51-65": 0,
+        "65+": 0
+    };
+
+    residents.forEach(function(resident) {
+
+        const age =
+            parseInt(resident.age, 10) || 0;
+
+        if (age <= 17) ageGroups["0-17"]++;
+        else if (age <= 30) ageGroups["18-30"]++;
+        else if (age <= 50) ageGroups["31-50"]++;
+        else if (age <= 65) ageGroups["51-65"]++;
+        else ageGroups["65+"]++;
+
+    });
 
 
-    alert(
+    if (ageChartInstance) {
+        ageChartInstance.destroy();
+    }
 
-        "BRRMS REPORT\n\n" +
+    ageChartInstance = new Chart(
+        document.getElementById("ageChart"),
+        {
+            type: "bar",
+            data: {
+                labels: Object.keys(ageGroups),
+                datasets: [{
+                    label: "Residents",
+                    data: Object.values(ageGroups),
+                    backgroundColor: "#1a56db"
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        }
+    );
 
-        "Total Residents: " + total + "\n" +
 
-        "Active Residents: " + active + "\n" +
+    /* ===== OFFICIALS BY POSITION ===== */
 
-        "Inactive Residents: " + inactive + "\n\n" +
+    const positionCounts = {};
 
-        "This report is generated from the current browser records."
+    officials.forEach(function(official) {
 
+        positionCounts[official.position] =
+            (positionCounts[official.position] || 0) + 1;
+
+    });
+
+
+    if (positionChartInstance) {
+        positionChartInstance.destroy();
+    }
+
+    positionChartInstance = new Chart(
+        document.getElementById("positionChart"),
+        {
+            type: "bar",
+            data: {
+                labels: Object.keys(positionCounts),
+                datasets: [{
+                    label: "Officials",
+                    data: Object.values(positionCounts),
+                    backgroundColor: "#f59e0b"
+                }]
+            },
+            options: {
+                indexAxis: "y",
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        }
+    );
+
+
+    /* ===== CERTIFICATES BY TYPE ===== */
+
+    const certCounts = {};
+
+    certificates.forEach(function(certificate) {
+
+        certCounts[certificate.type] =
+            (certCounts[certificate.type] || 0) + 1;
+
+    });
+
+
+    if (certChartInstance) {
+        certChartInstance.destroy();
+    }
+
+    certChartInstance = new Chart(
+        document.getElementById("certChart"),
+        {
+            type: "pie",
+            data: {
+                labels: Object.keys(certCounts),
+                datasets: [{
+                    data: Object.values(certCounts),
+                    backgroundColor: [
+                        "#1a56db", "#22c55e", "#f59e0b",
+                        "#ef4444", "#8b5cf6", "#0ea5e9"
+                    ]
+                }]
+            },
+            options: {
+                plugins: { legend: { position: "bottom" } }
+            }
+        }
     );
 
 }
@@ -1182,7 +2136,13 @@ document
     .querySelector(".report-action")
     .addEventListener(
         "click",
-        showReports
+        function() {
+
+            document
+                .querySelector('.side-link[data-page="reports"]')
+                .click();
+
+        }
     );
 
 
@@ -1293,9 +2253,16 @@ navigationButtons.forEach(
                     );
 
 
-                if (page === "residents" || page === "records") {
+                const reportsPageSection =
+                    document.getElementById("reportsPage");
 
-                    dashboardContentSection.style.display = "none";
+
+                dashboardContentSection.style.display = "none";
+                residentsPageSection.style.display = "none";
+                reportsPageSection.style.display = "none";
+
+
+                if (page === "residents" || page === "records") {
 
                     residentsPageSection.style.display = "block";
 
@@ -1305,18 +2272,15 @@ navigationButtons.forEach(
 
                     renderResidentsPage("");
 
+                } else if (page === "reports") {
+
+                    reportsPageSection.style.display = "block";
+
+                    renderReports();
+
                 } else {
 
                     dashboardContentSection.style.display = "block";
-
-                    residentsPageSection.style.display = "none";
-
-                }
-
-
-                if (page === "reports") {
-
-                    showReports();
 
                 }
 
@@ -1416,6 +2380,365 @@ document
 
 
 /* =========================================================
+   DOCUMENT REQUESTS
+   Corresponds to document_requests table
+   ========================================================= */
+
+const defaultRequests = [
+    { id: "REQ-001", resident: "Juan Dela Cruz", type: "Barangay Clearance", date: "Aug. 18, 2026", status: "Completed" },
+    { id: "REQ-002", resident: "Maria Santos", type: "Certificate of Residency", date: "Aug. 18, 2026", status: "Pending" },
+    { id: "REQ-003", resident: "Pedro Garcia", type: "Barangay Indigency", date: "Aug. 19, 2026", status: "Completed" },
+    { id: "REQ-004", resident: "Ana Reyes", type: "Barangay Clearance", date: "Aug. 19, 2026", status: "Processing" },
+    { id: "REQ-005", resident: "Carlo Mendoza", type: "Certificate of Residency", date: "Aug. 20, 2026", status: "Pending" }
+];
+
+let documentRequests =
+    JSON.parse(localStorage.getItem("brrmsRequests")) || defaultRequests;
+
+
+function saveRequestsData() {
+
+    localStorage.setItem(
+        "brrmsRequests",
+        JSON.stringify(documentRequests)
+    );
+
+}
+
+
+function requestStatusClass(status) {
+
+    if (status === "Completed") return "completed-status";
+    if (status === "Processing") return "processing-status";
+    return "pending-status";
+
+}
+
+
+function renderRequestsTable() {
+
+    const requestTable =
+        document.getElementById("requestTable");
+
+    if (!requestTable) {
+
+        return;
+
+    }
+
+
+    requestTable.innerHTML = "";
+
+
+    if (documentRequests.length === 0) {
+
+        requestTable.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-row">
+                    <span class="empty-state-icon">🗂️</span>
+                    No document requests yet.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    documentRequests.forEach(function(request) {
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML = `
+
+            <td>${request.id}</td>
+
+            <td>${request.resident}</td>
+
+            <td>${request.type}</td>
+
+            <td>${request.date}</td>
+
+            <td>
+                <span class="status ${requestStatusClass(request.status)}">
+                    ${request.status}
+                </span>
+            </td>
+
+            <td class="row-actions">
+                <button type="button" class="row-edit-btn request-edit-btn" data-id="${request.id}" title="Edit">
+                    ✎
+                </button>
+                <button type="button" class="row-delete-btn request-delete-btn" data-id="${request.id}" title="Delete">
+                    🗑
+                </button>
+            </td>
+
+        `;
+
+        requestTable.appendChild(row);
+
+    });
+
+}
+
+
+function generateRequestID() {
+
+    return "REQ-" +
+        String(documentRequests.length + 1)
+        .padStart(3, "0");
+
+}
+
+
+const requestModal =
+    document.getElementById("requestModal");
+
+const requestForm =
+    document.getElementById("requestForm");
+
+const addRequestBtn =
+    document.getElementById("addRequestBtn");
+
+const closeRequest =
+    document.getElementById("closeRequest");
+
+
+if (requestModal && requestForm && addRequestBtn && closeRequest) {
+
+    renderRequestsTable();
+
+
+    /* OPEN ADD MODAL */
+
+    addRequestBtn.addEventListener("click", function() {
+
+        requestForm.reset();
+
+        document.getElementById("requestEditId").value = "";
+
+        document.getElementById("requestModalTitle").textContent =
+            "Add Document Request";
+
+        requestModal.classList.add("show");
+
+    });
+
+
+    /* CLOSE MODAL */
+
+    closeRequest.addEventListener("click", function() {
+
+        requestModal.classList.remove("show");
+
+    });
+
+
+    requestModal.addEventListener("click", function(event) {
+
+        if (event.target === requestModal) {
+
+            requestModal.classList.remove("show");
+
+        }
+
+    });
+
+
+    /* EDIT / DELETE (event delegation) */
+
+    document
+        .getElementById("requestTable")
+        .addEventListener("click", function(event) {
+
+            const editBtn =
+                event.target.closest(".request-edit-btn");
+
+            const deleteBtn =
+                event.target.closest(".request-delete-btn");
+
+
+            if (editBtn) {
+
+                const request =
+                    documentRequests.find(function(item) {
+                        return item.id === editBtn.dataset.id;
+                    });
+
+                if (!request) return;
+
+                document.getElementById("requestEditId").value =
+                    request.id;
+
+                document.getElementById("requestResident").value =
+                    request.resident;
+
+                document.getElementById("requestType").value =
+                    request.type;
+
+                document.getElementById("requestStatus").value =
+                    request.status;
+
+                const parsedDate =
+                    new Date(request.date);
+
+                if (!isNaN(parsedDate)) {
+
+                    const iso =
+                        parsedDate.toISOString().split("T")[0];
+
+                    document.getElementById("requestDate").value =
+                        iso;
+
+                }
+
+                document.getElementById("requestModalTitle").textContent =
+                    "Edit Document Request";
+
+                requestModal.classList.add("show");
+
+            }
+
+
+            if (deleteBtn) {
+
+                const request =
+                    documentRequests.find(function(item) {
+                        return item.id === deleteBtn.dataset.id;
+                    });
+
+                if (!request) return;
+
+                const confirmDelete =
+                    confirm(
+                        `Delete the ${request.type} request for ${request.resident}?`
+                    );
+
+                if (!confirmDelete) return;
+
+                documentRequests =
+                    documentRequests.filter(function(item) {
+                        return item.id !== deleteBtn.dataset.id;
+                    });
+
+                logActivity(
+                    "🗂️",
+                    `deleted a document request for <strong>${request.resident}</strong>`
+                );
+
+                saveRequestsData();
+                renderRequestsTable();
+
+            }
+
+        });
+
+
+    /* SUBMIT FORM (add or edit) */
+
+    requestForm.addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+
+        if (!requestForm.checkValidity()) {
+
+            requestForm.reportValidity();
+
+            return;
+
+        }
+
+
+        const editId =
+            document.getElementById("requestEditId").value;
+
+        const resident =
+            document.getElementById("requestResident").value.trim();
+
+        const type =
+            document.getElementById("requestType").value;
+
+        const status =
+            document.getElementById("requestStatus").value;
+
+        const dateInput =
+            document.getElementById("requestDate").value;
+
+        const formattedDate =
+            dateInput
+                ? new Date(dateInput + "T00:00:00").toLocaleDateString(
+                      "en-US",
+                      { month: "short", day: "2-digit", year: "numeric" }
+                  )
+                : new Date().toLocaleDateString(
+                      "en-US",
+                      { month: "short", day: "2-digit", year: "numeric" }
+                  );
+
+
+        if (editId) {
+
+            const request =
+                documentRequests.find(function(item) {
+                    return item.id === editId;
+                });
+
+            if (request) {
+
+                request.resident = resident;
+                request.type = type;
+                request.status = status;
+                request.date = formattedDate;
+
+                logActivity(
+                    "🗂️",
+                    `updated a document request for <strong>${resident}</strong>`
+                );
+
+            }
+
+        } else {
+
+            documentRequests.push({
+                id: generateRequestID(),
+                resident: resident,
+                type: type,
+                date: formattedDate,
+                status: status
+            });
+
+            logActivity(
+                "🗂️",
+                `added a new document request for <strong>${resident}</strong>`
+            );
+
+        }
+
+
+        saveRequestsData();
+        renderRequestsTable();
+
+        requestForm.reset();
+        requestModal.classList.remove("show");
+
+        showToast(
+            "success",
+            editId ? "Request Updated" : "Request Added",
+            editId
+                ? "The document request has been updated."
+                : "The new document request has been saved."
+        );
+
+    });
+
+}
+
+
+/* =========================================================
    TASK 5 - FORM 1
    ADD BARANGAY OFFICIAL
    Corresponds to barangay_officials table
@@ -1443,6 +2766,9 @@ function saveOfficialsData() {
 }
 
 
+let currentlyEditingOfficialId = null;
+
+
 function renderOfficialsTable() {
 
     officialTable.innerHTML = "";
@@ -1452,7 +2778,8 @@ function renderOfficialsTable() {
 
         officialTable.innerHTML = `
             <tr>
-                <td colspan="5" class="empty-row">
+                <td colspan="6" class="empty-row">
+                    <span class="empty-state-icon">🏛️</span>
                     No officials recorded yet.
                 </td>
             </tr>
@@ -1468,6 +2795,12 @@ function renderOfficialsTable() {
         const row =
             document.createElement("tr");
 
+        if (official.id === currentlyEditingOfficialId) {
+
+            row.classList.add("row-editing");
+
+        }
+
         row.innerHTML = `
 
             <td>${official.id}</td>
@@ -1480,11 +2813,132 @@ function renderOfficialsTable() {
 
             <td>${official.term}</td>
 
+            <td class="row-actions">
+                <button type="button" class="row-edit-btn" data-id="${official.id}" title="Edit">
+                    ✎
+                </button>
+                <button type="button" class="row-delete-btn" data-id="${official.id}" title="Delete">
+                    🗑
+                </button>
+            </td>
+
         `;
 
         officialTable.appendChild(row);
 
     });
+
+}
+
+
+/* =========================
+   TASK 8 - EDIT / DELETE OFFICIAL
+   ========================= */
+
+function openEditOfficialModal(id) {
+
+    const official =
+        officials.find(function(item) {
+
+            return item.id === id;
+
+        });
+
+
+    if (!official) {
+
+        return;
+
+    }
+
+
+    currentlyEditingOfficialId = id;
+
+
+    document.getElementById("officialEditId").value =
+        official.id;
+
+    document.getElementById("officialCode").value =
+        official.id;
+
+    document.getElementById("officialName").value =
+        official.name;
+
+    document.getElementById("officialPosition").value =
+        official.position;
+
+    document.getElementById("officialContact").value =
+        official.contact;
+
+    document.getElementById("officialTerm").value =
+        official.term;
+
+    document.getElementById("officialModalTitle").textContent =
+        "Edit Official";
+
+    document.getElementById("officialSaveBtn").textContent =
+        "Save Changes";
+
+
+    renderOfficialsTable();
+
+    officialModal.classList.add("show");
+
+}
+
+
+function deleteOfficial(id) {
+
+    const official =
+        officials.find(function(item) {
+
+            return item.id === id;
+
+        });
+
+
+    if (!official) {
+
+        return;
+
+    }
+
+
+    const confirmDelete =
+        confirm(
+            `Delete ${official.name}'s record? This cannot be undone.`
+        );
+
+
+    if (!confirmDelete) {
+
+        return;
+
+    }
+
+
+    officials =
+        officials.filter(function(item) {
+
+            return item.id !== id;
+
+        });
+
+
+    logActivity(
+        "🗑",
+        `removed official <strong>${official.name}</strong>`
+    );
+
+    saveOfficialsData();
+
+    renderOfficialsTable();
+
+    showToast(
+        "success",
+        "Official Removed",
+        `${official.name} has been deleted.`
+    );
 
 }
 
@@ -1532,8 +2986,18 @@ if (
 
             officialForm.reset();
 
+            currentlyEditingOfficialId = null;
+
+            document.getElementById("officialEditId").value = "";
+
             document.getElementById("officialCode").value =
                 generateOfficialID();
+
+            document.getElementById("officialModalTitle").textContent =
+                "Add Barangay Official";
+
+            document.getElementById("officialSaveBtn").textContent =
+                "Add Official";
 
             officialModal.classList.add("show");
 
@@ -1548,6 +3012,10 @@ if (
         function() {
 
             officialModal.classList.remove("show");
+
+            currentlyEditingOfficialId = null;
+
+            renderOfficialsTable();
 
         }
     );
@@ -1566,6 +3034,40 @@ if (
                 officialModal.classList.remove(
                     "show"
                 );
+
+                currentlyEditingOfficialId = null;
+
+                renderOfficialsTable();
+
+            }
+
+        }
+    );
+
+
+    /* ROW ACTIONS: EDIT / DELETE */
+
+    officialTable.addEventListener(
+        "click",
+        function(event) {
+
+            const editBtn =
+                event.target.closest(".row-edit-btn");
+
+            const deleteBtn =
+                event.target.closest(".row-delete-btn");
+
+
+            if (editBtn) {
+
+                openEditOfficialModal(editBtn.dataset.id);
+
+            }
+
+
+            if (deleteBtn) {
+
+                deleteOfficial(deleteBtn.dataset.id);
 
             }
 
@@ -1637,17 +3139,72 @@ if (
                     .trim();
 
 
-            /* SAVE TO ARRAY + LOCAL STORAGE */
+            const editId =
+                document
+                    .getElementById(
+                        "officialEditId"
+                    )
+                    .value;
 
-            officials.push({
-                id: code,
-                name: name,
-                position: position,
-                contact: contact,
-                term: term
-            });
+
+            /* =====================
+               UPDATE EXISTING
+               ===================== */
+
+            if (editId) {
+
+                const official =
+                    officials.find(function(item) {
+
+                        return item.id === editId;
+
+                    });
+
+
+                if (official) {
+
+                    official.id = code;
+
+                    official.name = name;
+
+                    official.position = position;
+
+                    official.contact = contact;
+
+                    official.term = term;
+
+
+                    logActivity(
+                        "✎",
+                        `updated official <strong>${name}</strong>'s record`
+                    );
+
+                }
+
+            } else {
+
+                /* =====================
+                   ADD NEW
+                   ===================== */
+
+                officials.push({
+                    id: code,
+                    name: name,
+                    position: position,
+                    contact: contact,
+                    term: term
+                });
+
+                logActivity(
+                    "🏛️",
+                    `added new official <strong>${name}</strong> (${position})`
+                );
+
+            }
 
             saveOfficialsData();
+
+            currentlyEditingOfficialId = null;
 
             renderOfficialsTable();
 
@@ -1662,8 +3219,12 @@ if (
             );
 
 
-            alert(
-                "Barangay official successfully added!"
+            showToast(
+                "success",
+                editId ? "Official Updated" : "Official Added",
+                editId
+                    ? "The official's information has been updated."
+                    : "The new barangay official has been saved."
             );
 
         }
@@ -1700,6 +3261,38 @@ function saveCertificatesData() {
 }
 
 
+let currentlyEditingCertificateId = null;
+
+
+function toDateInputValue(displayDate) {
+
+    const parsed =
+        new Date(displayDate);
+
+
+    if (Number.isNaN(parsed.getTime())) {
+
+        return "";
+
+    }
+
+
+    const year = parsed.getFullYear();
+
+    const month =
+        String(parsed.getMonth() + 1)
+        .padStart(2, "0");
+
+    const day =
+        String(parsed.getDate())
+        .padStart(2, "0");
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
 function renderCertificatesTable() {
 
     certificateTable.innerHTML = "";
@@ -1709,7 +3302,8 @@ function renderCertificatesTable() {
 
         certificateTable.innerHTML = `
             <tr>
-                <td colspan="5" class="empty-row">
+                <td colspan="6" class="empty-row">
+                    <span class="empty-state-icon">📄</span>
                     No certificates recorded yet.
                 </td>
             </tr>
@@ -1725,6 +3319,12 @@ function renderCertificatesTable() {
         const row =
             document.createElement("tr");
 
+        if (certificate.id === currentlyEditingCertificateId) {
+
+            row.classList.add("row-editing");
+
+        }
+
         row.innerHTML = `
 
             <td>${certificate.id}</td>
@@ -1737,11 +3337,465 @@ function renderCertificatesTable() {
 
             <td>${certificate.purpose}</td>
 
+            <td class="row-actions">
+                <button type="button" class="row-edit-btn" data-id="${certificate.id}" title="Edit">
+                    ✎
+                </button>
+                <button type="button" class="row-delete-btn" data-id="${certificate.id}" title="Delete">
+                    🗑
+                </button>
+                <button type="button" class="row-print-btn" data-id="${certificate.id}" title="Print">
+                    🖨
+                </button>
+            </td>
+
         `;
 
         certificateTable.appendChild(row);
 
     });
+
+}
+
+
+certificateTable.addEventListener(
+    "click",
+    function(event) {
+
+        const printBtn =
+            event.target.closest(".row-print-btn");
+
+        const editBtn =
+            event.target.closest(".row-edit-btn");
+
+        const deleteBtn =
+            event.target.closest(".row-delete-btn");
+
+
+        if (printBtn) {
+
+            printCertificate(printBtn.dataset.id);
+
+        }
+
+
+        if (editBtn) {
+
+            openEditCertificateModal(editBtn.dataset.id);
+
+        }
+
+
+        if (deleteBtn) {
+
+            deleteCertificate(deleteBtn.dataset.id);
+
+        }
+
+    }
+);
+
+
+/* =========================
+   TASK 8 - EDIT / DELETE CERTIFICATE
+   ========================= */
+
+function openEditCertificateModal(id) {
+
+    const certificate =
+        certificates.find(function(item) {
+
+            return item.id === id;
+
+        });
+
+
+    if (!certificate) {
+
+        return;
+
+    }
+
+
+    currentlyEditingCertificateId = id;
+
+
+    document.getElementById("certificateEditId").value =
+        certificate.id;
+
+    document.getElementById("certificateCode").value =
+        certificate.id;
+
+    document.getElementById("certificateResident").value =
+        certificate.resident;
+
+    document.getElementById("certificateType").value =
+        certificate.type;
+
+    document.getElementById("certificateDate").value =
+        toDateInputValue(certificate.date);
+
+    document.getElementById("certificatePurpose").value =
+        certificate.purpose;
+
+    document.getElementById("certificateModalTitle").textContent =
+        "Edit Certificate";
+
+    document.getElementById("certificateSaveBtn").textContent =
+        "Save Changes";
+
+
+    renderCertificatesTable();
+
+    certificateModal.classList.add("show");
+
+}
+
+
+function deleteCertificate(id) {
+
+    const certificate =
+        certificates.find(function(item) {
+
+            return item.id === id;
+
+        });
+
+
+    if (!certificate) {
+
+        return;
+
+    }
+
+
+    const confirmDelete =
+        confirm(
+            `Delete the ${certificate.type} certificate for ${certificate.resident}? This cannot be undone.`
+        );
+
+
+    if (!confirmDelete) {
+
+        return;
+
+    }
+
+
+    certificates =
+        certificates.filter(function(item) {
+
+            return item.id !== id;
+
+        });
+
+
+    logActivity(
+        "🗑",
+        `removed a <strong>${certificate.type}</strong> certificate for ${certificate.resident}`
+    );
+
+    saveCertificatesData();
+
+    renderCertificatesTable();
+
+    showToast(
+        "success",
+        "Certificate Removed",
+        "The certificate record has been deleted."
+    );
+
+}
+
+
+function printCertificate(id) {
+
+    const certificate =
+        certificates.find(function(item) {
+
+            return item.id === id;
+
+        });
+
+
+    if (!certificate) {
+
+        return;
+
+    }
+
+
+    const printWindow =
+        window.open("", "_blank", "width=850,height=700");
+
+
+    const issuedDate =
+        certificate.date;
+
+
+    /* =========================
+       PULL REAL OFFICIALS DATA
+       ========================= */
+
+    const captain =
+        officials.find(function(item) {
+
+            return item.position === "Barangay Captain";
+
+        });
+
+    const captainName =
+        captain ? captain.name : "Barangay Captain";
+
+    const councilors =
+        officials.filter(function(item) {
+
+            return item.position !== "Barangay Captain";
+
+        });
+
+    const councilorsHTML =
+        councilors.length > 0
+            ? councilors.map(function(item) {
+
+                return `
+                    <li>
+                        <strong>${item.name}</strong>
+                        <span>${item.position}</span>
+                    </li>
+                `;
+
+            }).join("")
+            : `<li><span>No additional officials on record.</span></li>`;
+
+
+    /* =========================
+       SEAL (drawn in SVG, no
+       external image needed)
+       ========================= */
+
+    const rayAngles =
+        [0, 45, 90, 135, 180, 225, 270, 315];
+
+    const raysHTML =
+        rayAngles.map(function(angle) {
+
+            return `<polygon points="50,6 55,22 45,22" fill="#f5b301" transform="rotate(${angle} 50 50)"></polygon>`;
+
+        }).join("");
+
+    const sealSVG = `
+        <svg width="86" height="86" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="47" fill="none" stroke="#12203b" stroke-width="2"></circle>
+            <circle cx="50" cy="50" r="39" fill="none" stroke="#f5b301" stroke-width="1"></circle>
+            <g>${raysHTML}</g>
+            <circle cx="50" cy="50" r="15" fill="#12203b"></circle>
+            <text x="50" y="54" text-anchor="middle" font-size="11" fill="#fff" font-family="Georgia, serif" font-weight="bold">BC</text>
+        </svg>
+    `;
+
+
+    printWindow.document.write(`
+
+        <html>
+        <head>
+            <title>${certificate.type} - ${certificate.resident}</title>
+            <style>
+                * {
+                    box-sizing: border-box;
+                }
+                body {
+                    font-family: Georgia, 'Times New Roman', serif;
+                    padding: 50px 60px;
+                    color: #12203b;
+                }
+                .letterhead {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 18px;
+                    text-align: center;
+                    border-bottom: 2px solid #12203b;
+                    padding-bottom: 16px;
+                    margin-bottom: 24px;
+                }
+                .letterhead .small {
+                    margin: 1px 0;
+                    font-size: 11.5px;
+                    color: #555;
+                }
+                .letterhead h2 {
+                    margin: 3px 0;
+                    letter-spacing: 2px;
+                    font-size: 22px;
+                }
+                .letterhead .office-line {
+                    font-size: 12.5px;
+                    font-style: italic;
+                    color: #333;
+                }
+                .page {
+                    display: flex;
+                    gap: 34px;
+                }
+                .officials-col {
+                    width: 190px;
+                    flex-shrink: 0;
+                    font-size: 12px;
+                    border-right: 1px solid #d6dce5;
+                    padding-right: 20px;
+                }
+                .officials-col .captain-name {
+                    font-weight: bold;
+                    font-size: 13px;
+                }
+                .officials-col .captain-title {
+                    font-size: 11px;
+                    color: #555;
+                    margin-bottom: 14px;
+                }
+                .officials-col .councilors-heading {
+                    font-size: 11px;
+                    font-weight: bold;
+                    letter-spacing: 0.5px;
+                    color: #555;
+                    margin-bottom: 6px;
+                }
+                .officials-col ul {
+                    list-style: none;
+                    margin: 0;
+                    padding: 0;
+                }
+                .officials-col li {
+                    margin-bottom: 10px;
+                    line-height: 1.4;
+                }
+                .officials-col li strong {
+                    display: block;
+                    font-size: 12px;
+                }
+                .officials-col li span {
+                    display: block;
+                    font-size: 10.5px;
+                    color: #666;
+                }
+                .body-col {
+                    flex: 1;
+                }
+                .title-wrap {
+                    text-align: center;
+                }
+                .title {
+                    display: inline-block;
+                    font-size: 22px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin: 6px 0 34px;
+                    border-bottom: 2px solid #12203b;
+                    padding-bottom: 6px;
+                }
+                .body-text {
+                    font-size: 15px;
+                    line-height: 2;
+                    margin: 20px 0;
+                    text-align: justify;
+                }
+                .signature {
+                    margin-top: 70px;
+                    display: flex;
+                    justify-content: flex-end;
+                }
+                .signature div {
+                    text-align: center;
+                }
+                .signature .name {
+                    font-weight: bold;
+                    margin-bottom: 2px;
+                }
+                .signature .line {
+                    border-top: 1px solid #12203b;
+                    width: 230px;
+                    margin: 40px 0 6px;
+                }
+                .cert-id {
+                    margin-top: 50px;
+                    font-size: 11px;
+                    color: #999;
+                }
+            </style>
+        </head>
+        <body>
+
+            <div class="letterhead">
+                ${sealSVG}
+                <div>
+                    <p class="small">Republic of the Philippines</p>
+                    <p class="small">General Santos City</p>
+                    <h2>BARANGAY CONEL</h2>
+                    <p class="office-line">Office of the Punong Barangay</p>
+                </div>
+            </div>
+
+            <div class="page">
+
+                <div class="officials-col">
+                    <div class="captain-name">HON. ${captainName}</div>
+                    <div class="captain-title">Barangay Captain</div>
+                    <div class="councilors-heading">COUNCILORS</div>
+                    <ul>
+                        ${councilorsHTML}
+                    </ul>
+                </div>
+
+                <div class="body-col">
+
+                    <div class="title-wrap">
+                        <div class="title">${certificate.type}</div>
+                    </div>
+
+                    <div class="body-text">
+                        This is to certify that <strong>${certificate.resident}</strong>
+                        is a bona fide resident of Barangay Conel, and this certificate
+                        is being issued upon the request of the above-named person for
+                        the purpose of <strong>${certificate.purpose}</strong>.
+                        <br><br>
+                        Issued this ${issuedDate} at Barangay Conel, General Santos City,
+                        Philippines.
+                    </div>
+
+                    <div class="signature">
+                        <div>
+                            <div class="line"></div>
+                            <div class="name">HON. ${captainName}</div>
+                            Punong Barangay
+                        </div>
+                    </div>
+
+                    <div class="cert-id">
+                        Certificate ID: ${certificate.id}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </body>
+        </html>
+
+    `);
+
+
+    printWindow.document.close();
+
+    printWindow.focus();
+
+
+    setTimeout(function() {
+
+        printWindow.print();
+
+    }, 300);
 
 }
 
@@ -1799,8 +3853,18 @@ if (
 
             certificateForm.reset();
 
+            currentlyEditingCertificateId = null;
+
+            document.getElementById("certificateEditId").value = "";
+
             document.getElementById("certificateCode").value =
                 generateCertificateID();
+
+            document.getElementById("certificateModalTitle").textContent =
+                "Add Barangay Certificate";
+
+            document.getElementById("certificateSaveBtn").textContent =
+                "Add Certificate";
 
             certificateModal.classList.add(
                 "show"
@@ -1820,6 +3884,10 @@ if (
                 "show"
             );
 
+            currentlyEditingCertificateId = null;
+
+            renderCertificatesTable();
+
         }
     );
 
@@ -1837,6 +3905,10 @@ if (
                 certificateModal.classList.remove(
                     "show"
                 );
+
+                currentlyEditingCertificateId = null;
+
+                renderCertificatesTable();
 
             }
 
@@ -1924,17 +3996,72 @@ if (
                 );
 
 
-            /* SAVE TO ARRAY + LOCAL STORAGE */
+            const editId =
+                document
+                    .getElementById(
+                        "certificateEditId"
+                    )
+                    .value;
 
-            certificates.push({
-                id: code,
-                resident: resident,
-                type: type,
-                date: formattedDate,
-                purpose: purpose
-            });
+
+            /* =====================
+               UPDATE EXISTING
+               ===================== */
+
+            if (editId) {
+
+                const certificate =
+                    certificates.find(function(item) {
+
+                        return item.id === editId;
+
+                    });
+
+
+                if (certificate) {
+
+                    certificate.id = code;
+
+                    certificate.resident = resident;
+
+                    certificate.type = type;
+
+                    certificate.date = formattedDate;
+
+                    certificate.purpose = purpose;
+
+
+                    logActivity(
+                        "✎",
+                        `updated a <strong>${type}</strong> certificate for ${resident}`
+                    );
+
+                }
+
+            } else {
+
+                /* =====================
+                   ADD NEW
+                   ===================== */
+
+                certificates.push({
+                    id: code,
+                    resident: resident,
+                    type: type,
+                    date: formattedDate,
+                    purpose: purpose
+                });
+
+                logActivity(
+                    "📄",
+                    `issued a <strong>${type}</strong> for ${resident}`
+                );
+
+            }
 
             saveCertificatesData();
+
+            currentlyEditingCertificateId = null;
 
             renderCertificatesTable();
 
@@ -1949,8 +4076,12 @@ if (
             );
 
 
-            alert(
-                "Certificate successfully added!"
+            showToast(
+                "success",
+                editId ? "Certificate Updated" : "Certificate Added",
+                editId
+                    ? "The certificate has been updated."
+                    : "The new certificate has been saved."
             );
 
         }
@@ -1991,6 +4122,15 @@ document.addEventListener(
 
         }
 
+
+        if (profileModal) {
+
+            profileModal.classList.remove(
+                "show"
+            );
+
+        }
+
     }
 );
 
@@ -2013,7 +4153,8 @@ document.addEventListener(
 const task6Forms = [
     document.getElementById("residentForm"),
     document.getElementById("officialForm"),
-    document.getElementById("certificateForm")
+    document.getElementById("certificateForm"),
+    document.getElementById("requestForm")
 ].filter(Boolean);
 
 

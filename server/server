@@ -1,569 +1,1123 @@
+console.log("BRRMS SERVER STARTING...");
+
+const express = require("express");
+const mysql = require("mysql2");
+const cors = require("cors");
+const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+
+let nodemailer = null;
+try {
+    nodemailer = require("nodemailer");
+} catch (error) {
+    console.log(
+        "nodemailer is not installed — email sending disabled, codes will print to this console instead."
+    );
+}
+
+const app = express();
+const PORT = 3000;
+
 // =========================
-// BRRMS SIGN UP VALIDATION
-// TASK 6 - DATA INPUT VALIDATION
+// MIDDLEWARE
 // =========================
 
-document.addEventListener("DOMContentLoaded", () => {
+app.use(cors());
+app.use(express.json());
 
-    const signupForm = document.getElementById("signupForm");
+// =========================
+// MYSQL CONNECTION
+// =========================
 
-    const fullName = document.getElementById("fullName");
-    const email = document.getElementById("email");
-    const username = document.getElementById("username");
-    const password = document.getElementById("password");
-    const confirmPassword = document.getElementById("confirmPassword");
-    const mfaCode = document.getElementById("mfaCode");
+const db = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "Licayankim19!",
+    database: "brrms_db"
+});
 
-    const fullNameError = document.getElementById("fullNameError");
-    const emailError = document.getElementById("emailError");
-    const usernameError = document.getElementById("usernameError");
-    const passwordError = document.getElementById("passwordError");
-    const confirmPasswordError = document.getElementById("confirmPasswordError");
-    const mfaCodeError = document.getElementById("mfaError");
-
-    const signupMessage = document.getElementById("signupMessage");
-
-
-    // =========================
-    // VALIDATION FUNCTIONS
-    // =========================
-
-    function validateFullName() {
-
-        const value = fullName.value.trim();
-
-        if (value === "") {
-            showError(fullName, fullNameError, "Full name is required.");
-            return false;
-        }
-
-        if (value.length < 3) {
-            showError(
-                fullName,
-                fullNameError,
-                "Full name must be at least 3 characters."
-            );
-            return false;
-        }
-
-        if (value.length > 100) {
-            showError(
-                fullName,
-                fullNameError,
-                "Full name must not exceed 100 characters."
-            );
-            return false;
-        }
-
-        // Letters, spaces, periods, apostrophes and hyphens only
-        if (!/^[A-Za-zÀ-ÿ .'-]+$/.test(value)) {
-            showError(
-                fullName,
-                fullNameError,
-                "Full name may contain letters, spaces, periods, apostrophes, and hyphens only."
-            );
-            return false;
-        }
-
-        showSuccess(fullName, fullNameError);
-        return true;
+db.connect((err) => {
+    if (err) {
+        console.error("MySQL connection failed:", err.message);
+        return;
     }
 
+    console.log("Connected to MySQL database!");
 
-    // =========================
-    // EMAIL VALIDATION
-    // =========================
+    // Create/update demo accounts
+    setupDemoAccounts();
+});
 
-    function validateEmail() {
+// =========================
+// EMAIL TRANSPORTER
+// =========================
+// To actually send real emails, set these two environment variables
+// before starting the server (PowerShell example):
+//
+//   $env:EMAIL_USER="youraddress@gmail.com"
+//   $env:EMAIL_PASS="your-16-char-gmail-app-password"
+//   node server.js
+//
+// A Gmail App Password (not your normal password) is required:
+// https://myaccount.google.com/apppasswords
+//
+// If these are not set, the server will NOT attempt to send a real
+// email. Instead it will just print the code to this terminal, so
+// you can still test the flow locally without setting up email yet.
 
-        const value = email.value.trim();
+const EMAIL_USER = process.env.EMAIL_USER || null;
+const EMAIL_PASS = process.env.EMAIL_PASS || null;
+const EMAIL_CONFIGURED = Boolean(EMAIL_USER && EMAIL_PASS && nodemailer);
 
-        if (value === "") {
-            showError(
-                email,
-                emailError,
-                "Email address is required."
-            );
-            return false;
+let transporter = null;
+
+if (EMAIL_CONFIGURED) {
+
+    transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS
         }
+    });
 
-        if (value.length > 100) {
-            showError(
-                email,
-                emailError,
-                "Email address must not exceed 100 characters."
-            );
-            return false;
-        }
+    console.log("Email sending is configured (Gmail).");
 
-        // Basic valid email format
-        const emailPattern =
-            /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+} else {
 
-        if (!emailPattern.test(value)) {
-            showError(
-                email,
-                emailError,
-                "Please enter a valid email address."
-            );
-            return false;
-        }
-
-        showSuccess(email, emailError);
-        return true;
-    }
-
-
-    // =========================
-    // USERNAME VALIDATION
-    // =========================
-
-    function validateUsername() {
-
-        const value = username.value.trim();
-
-        if (value === "") {
-            showError(
-                username,
-                usernameError,
-                "Username is required."
-            );
-            return false;
-        }
-
-        if (value.length < 3) {
-            showError(
-                username,
-                usernameError,
-                "Username must be at least 3 characters."
-            );
-            return false;
-        }
-
-        if (value.length > 50) {
-            showError(
-                username,
-                usernameError,
-                "Username must not exceed 50 characters."
-            );
-            return false;
-        }
-
-        // Letters, numbers, periods, underscores and hyphens only
-        if (!/^[A-Za-z0-9._-]+$/.test(value)) {
-            showError(
-                username,
-                usernameError,
-                "Username may contain letters, numbers, periods, underscores, and hyphens only."
-            );
-            return false;
-        }
-
-        showSuccess(username, usernameError);
-        return true;
-    }
-
-
-    // =========================
-    // PASSWORD VALIDATION
-    // =========================
-
-    function validatePassword() {
-
-        const value = password.value;
-
-        if (value === "") {
-            showError(
-                password,
-                passwordError,
-                "Password is required."
-            );
-            return false;
-        }
-
-        if (value.length < 8) {
-            showError(
-                password,
-                passwordError,
-                "Password must be at least 8 characters."
-            );
-            return false;
-        }
-
-        if (!/[A-Z]/.test(value)) {
-            showError(
-                password,
-                passwordError,
-                "Password must contain at least one uppercase letter."
-            );
-            return false;
-        }
-
-        if (!/[a-z]/.test(value)) {
-            showError(
-                password,
-                passwordError,
-                "Password must contain at least one lowercase letter."
-            );
-            return false;
-        }
-
-        if (!/[0-9]/.test(value)) {
-            showError(
-                password,
-                passwordError,
-                "Password must contain at least one number."
-            );
-            return false;
-        }
-
-        if (!/[!@#$%^&*(),.?":{}|<>_\-]/.test(value)) {
-            showError(
-                password,
-                passwordError,
-                "Password must contain at least one special character."
-            );
-            return false;
-        }
-
-        showSuccess(password, passwordError);
-        return true;
-    }
-
-
-    // =========================
-    // CONFIRM PASSWORD
-    // =========================
-
-    function validateConfirmPassword() {
-
-        const value = confirmPassword.value;
-
-        if (value === "") {
-            showError(
-                confirmPassword,
-                confirmPasswordError,
-                "Please confirm your password."
-            );
-            return false;
-        }
-
-        if (value !== password.value) {
-            showError(
-                confirmPassword,
-                confirmPasswordError,
-                "Passwords do not match."
-            );
-            return false;
-        }
-
-        showSuccess(confirmPassword, confirmPasswordError);
-        return true;
-    }
-
-
-    // =========================
-    // MFA CODE VALIDATION
-    // =========================
-
-    function validateMfaCode() {
-
-        const value = mfaCode.value.trim();
-
-        if (value === "") {
-            showError(
-                mfaCode,
-                mfaCodeError,
-                "MFA Code is required."
-            );
-            return false;
-        }
-
-        // Exactly 6 digits
-        if (!/^\d{6}$/.test(value)) {
-            showError(
-                mfaCode,
-                mfaCodeError,
-                "MFA Code must contain exactly 6 digits."
-            );
-            return false;
-        }
-
-        showSuccess(mfaCode, mfaCodeError);
-        return true;
-    }
-
-
-    // =========================
-    // ERROR / SUCCESS DISPLAY
-    // =========================
-
-    function showError(input, errorElement, message) {
-
-        input.classList.remove("valid");
-        input.classList.add("invalid");
-
-        errorElement.textContent = message;
-        errorElement.classList.add("show");
-    }
-
-
-    function showSuccess(input, errorElement) {
-
-        input.classList.remove("invalid");
-        input.classList.add("valid");
-
-        errorElement.textContent = "";
-        errorElement.classList.remove("show");
-    }
-
-
-    // =========================
-    // LIVE VALIDATION
-    // =========================
-
-    fullName.addEventListener(
-        "input",
-        validateFullName
+    console.log(
+        "Email sending is NOT configured. Verification codes will be printed to this console instead (dev mode)."
     );
 
-    email.addEventListener(
-        "input",
-        validateEmail
-    );
+}
 
-    username.addEventListener(
-        "input",
-        validateUsername
-    );
+async function sendCodeEmail(toEmail, subject, bodyText) {
 
-    password.addEventListener(
-        "input",
-        () => {
+    if (!EMAIL_CONFIGURED) {
+        // Dev fallback: nothing to actually send.
+        return { sent: false };
+    }
 
-            validatePassword();
+    try {
 
-            if (confirmPassword.value !== "") {
-                validateConfirmPassword();
-            }
+        await transporter.sendMail({
+            from: `"BRRMS" <${EMAIL_USER}>`,
+            to: toEmail,
+            subject: subject,
+            text: bodyText
+        });
 
+        return { sent: true };
+
+    } catch (error) {
+
+        console.error("Email send failed:", error.message);
+        return { sent: false };
+
+    }
+}
+
+// =========================
+// VERIFICATION CODE STORAGE
+// =========================
+// Simple in-memory store for one-time codes tied to a user_id.
+// Codes expire after 5 minutes and are cleared once used.
+// NOTE: this resets whenever the server restarts. That's fine for
+// development; for production you'd store this in the database
+// (e.g. a login_codes table) instead.
+
+const CODE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+const loginCodeStore = new Map();
+// loginCodeStore.set(user_id, {
+//     emailCode: "123456",
+//     mfaCode: "654321" or null,
+//     expiresAt: <timestamp>
+// });
+
+// Roles that must also enter an MFA code to log in.
+const MFA_REQUIRED_ROLES = [
+    "Staff",
+    "Barangay Captain",
+    "Administrator"
+];
+
+function generateSixDigitCode() {
+    return crypto.randomInt(100000, 999999).toString();
+}
+
+// =========================
+// TEST ROUTE
+// =========================
+
+app.get("/", (req, res) => {
+    res.send("BRRMS Server is running!");
+});
+
+// =========================
+// TEMP DEBUG: LIST USERS
+// =========================
+// Visit http://localhost:3000/api/debug/users in your browser to see
+// every account currently in the database. Remove this route before
+// deploying this app anywhere real — it has no authentication and
+// would leak account info to anyone who can reach the server.
+
+app.get("/api/debug/users", (req, res) => {
+
+    const sql = `
+        SELECT user_id, full_name, username, email, role, status
+        FROM users
+    `;
+
+    db.query(sql, (err, results) => {
+
+        if (err) {
+
+            console.error(err);
+
+            return res.status(500).json({
+                success: false,
+                message: "Database error."
+            });
         }
-    );
 
-    confirmPassword.addEventListener(
-        "input",
-        validateConfirmPassword
-    );
+        return res.json({
+            success: true,
+            users: results
+        });
 
-    mfaCode.addEventListener(
-        "input",
-        validateMfaCode
-    );
+    });
+
+});
+
+// =========================
+// SETUP DEMO ACCOUNTS
+// =========================
+
+async function setupDemoAccounts() {
+
+    try {
+
+        // -------------------------
+        // ADMINISTRATOR
+        // -------------------------
+
+        await createOrUpdateDemoAccount(
+            "Barangay Administrator",
+            "admin",
+            "admin123",
+            "Administrator",
+            "admin@brrms.local"
+        );
+
+        // -------------------------
+        // STAFF
+        // -------------------------
+
+        await createOrUpdateDemoAccount(
+            "Juan Staff",
+            "staff01",
+            "staff123",
+            "Staff",
+            "staff01@brrms.local"
+        );
+
+        // -------------------------
+        // BARANGAY CAPTAIN
+        // -------------------------
+
+        await createOrUpdateDemoAccount(
+            "Roberto Santos",
+            "captain01",
+            "captain123",
+            "Barangay Captain",
+            "captain01@brrms.local"
+        );
+
+        console.log("Demo accounts are ready!");
+
+    } catch (error) {
+
+        console.error("Demo account setup error:", error.message);
+
+    }
+}
 
 
-    // =========================
-    // FORM SUBMISSION
-    // =========================
+// =========================
+// CREATE / UPDATE DEMO ACCOUNT
+// =========================
 
-    signupForm.addEventListener(
-        "submit",
-        async (event) => {
+async function createOrUpdateDemoAccount(
+    fullName,
+    username,
+    plainPassword,
+    role,
+    email
+) {
 
-            event.preventDefault();
+    return new Promise(async (resolve, reject) => {
 
-            signupMessage.textContent = "";
-            signupMessage.className = "auth-message";
+        const checkSql = `
+            SELECT user_id, password
+            FROM users
+            WHERE username = ?
+            LIMIT 1
+        `;
 
+        db.query(checkSql, [username], async (err, results) => {
 
-            // Validate ALL fields
-
-            const validFullName =
-                validateFullName();
-
-            const validEmail =
-                validateEmail();
-
-            const validUsername =
-                validateUsername();
-
-            const validPassword =
-                validatePassword();
-
-            const validConfirmPassword =
-                validateConfirmPassword();
-
-            const validMfaCode =
-                validateMfaCode();
-
-
-            // =========================
-            // STOP IF INVALID
-            // =========================
-
-            if (
-                !validFullName ||
-                !validEmail ||
-                !validUsername ||
-                !validPassword ||
-                !validConfirmPassword ||
-                !validMfaCode
-            ) {
-
-                signupMessage.textContent =
-                    "Please correct the errors before creating your account.";
-
-                signupMessage.classList.add("error");
-
+            if (err) {
+                reject(err);
                 return;
             }
 
-
-            // =========================
-            // SEND DATA TO SERVER
-            // =========================
-
-            const userData = {
-
-                full_name:
-                    fullName.value.trim(),
-
-                username:
-                    username.value.trim(),
-
-                password:
-                    password.value
-
-            };
-
-
             try {
 
-                signupMessage.textContent =
-                    "Creating account...";
-
-                signupMessage.className =
-                    "auth-message loading";
-
-
-                const response = await fetch(
-                    "http://localhost:3000/api/signup",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify(userData)
-                    }
+                const hashedPassword = await bcrypt.hash(
+                    plainPassword,
+                    10
                 );
 
+                // -------------------------
+                // ACCOUNT DOES NOT EXIST
+                // -------------------------
 
-                const data =
-                    await response.json();
+                if (results.length === 0) {
 
+                    const insertSql = `
+                        INSERT INTO users
+                        (
+                            full_name,
+                            username,
+                            password,
+                            role,
+                            email,
+                            status,
+                            date_created
+                        )
+                        VALUES (?, ?, ?, ?, ?, 'Active', CURDATE())
+                    `;
 
-                // =========================
-                // SERVER REJECTED REQUEST
-                // =========================
+                    db.query(
+                        insertSql,
+                        [
+                            fullName,
+                            username,
+                            hashedPassword,
+                            role,
+                            email
+                        ],
+                        (err) => {
 
-                if (!response.ok) {
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
 
-                    signupMessage.textContent =
-                        data.message ||
-                        "Unable to create account.";
+                            console.log(
+                                `Created ${role} account: ${username}`
+                            );
 
-                    signupMessage.className =
-                        "auth-message error";
+                            resolve();
+                        }
+                    );
 
                     return;
                 }
 
+                // -------------------------
+                // ACCOUNT ALREADY EXISTS
+                // -------------------------
 
-                // =========================
-                // SUCCESS
-                // =========================
+                const user = results[0];
 
-                signupMessage.textContent =
-                    data.message ||
-                    "Account created successfully!";
+                // Check if password is already bcrypt hashed
+                const isBcryptHash =
+                    typeof user.password === "string" &&
+                    user.password.startsWith("$2");
 
-                signupMessage.className =
-                    "auth-message success";
+                if (!isBcryptHash) {
 
+                    const updateSql = `
+                        UPDATE users
+                        SET
+                            password = ?,
+                            full_name = ?,
+                            role = ?,
+                            email = COALESCE(email, ?),
+                            status = 'Active'
+                        WHERE username = ?
+                    `;
 
-                // Clear form
+                    db.query(
+                        updateSql,
+                        [
+                            hashedPassword,
+                            fullName,
+                            role,
+                            email,
+                            username
+                        ],
+                        (err) => {
 
-                signupForm.reset();
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
 
+                            console.log(
+                                `Updated password for ${username}`
+                            );
 
-                // Remove validation styles
-
-                [
-                    fullName,
-                    email,
-                    username,
-                    password,
-                    confirmPassword,
-                    mfaCode
-                ].forEach(input => {
-
-                    input.classList.remove(
-                        "valid",
-                        "invalid"
+                            resolve();
+                        }
                     );
 
-                });
+                } else {
 
+                    // Make sure role/status are correct
+                    const updateSql = `
+                        UPDATE users
+                        SET
+                            full_name = ?,
+                            role = ?,
+                            email = COALESCE(email, ?),
+                            status = 'Active'
+                        WHERE username = ?
+                    `;
 
-                // Remove error messages
+                    db.query(
+                        updateSql,
+                        [
+                            fullName,
+                            role,
+                            email,
+                            username
+                        ],
+                        (err) => {
 
-                [
-                    fullNameError,
-                    emailError,
-                    usernameError,
-                    passwordError,
-                    confirmPasswordError,
-                    mfaCodeError
-                ].forEach(error => {
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
 
-                    error.textContent = "";
-
-                    error.classList.remove(
-                        "show"
+                            resolve();
+                        }
                     );
-
-                });
-
-
-                // Redirect to login
-
-                setTimeout(() => {
-
-                    window.location.href =
-                        "login.html";
-
-                }, 1500);
-
+                }
 
             } catch (error) {
 
-                console.error(
-                    "Signup error:",
-                    error
+                reject(error);
+
+            }
+
+        });
+
+    });
+}
+
+
+// =========================
+// SIGN UP
+// =========================
+
+app.post("/api/signup", async (req, res) => {
+
+    const {
+        full_name,
+        username,
+        email,
+        password
+    } = req.body;
+
+    // Required fields
+    if (!full_name || !username || !password) {
+
+        return res.status(400).json({
+            success: false,
+            message: "Full name, username, and password are required."
+        });
+    }
+
+    try {
+
+        // -------------------------
+        // CHECK USERNAME
+        // -------------------------
+
+        const usernameSql = `
+            SELECT user_id
+            FROM users
+            WHERE username = ?
+            LIMIT 1
+        `;
+
+        db.query(
+            usernameSql,
+            [username],
+            async (err, results) => {
+
+                if (err) {
+
+                    console.error(err);
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Database error."
+                    });
+                }
+
+                if (results.length > 0) {
+
+                    return res.status(409).json({
+                        success: false,
+                        message: "Username already exists."
+                    });
+                }
+
+                // -------------------------
+                // CHECK EMAIL
+                // -------------------------
+
+                if (email) {
+
+                    const emailSql = `
+                        SELECT user_id
+                        FROM users
+                        WHERE email = ?
+                        LIMIT 1
+                    `;
+
+                    db.query(
+                        emailSql,
+                        [email],
+                        async (emailErr, emailResults) => {
+
+                            if (emailErr) {
+
+                                console.error(emailErr);
+
+                                return res.status(500).json({
+                                    success: false,
+                                    message: "Database error."
+                                });
+                            }
+
+                            if (emailResults.length > 0) {
+
+                                return res.status(409).json({
+                                    success: false,
+                                    message: "Email already exists."
+                                });
+                            }
+
+                            await createNewUser();
+                        }
+                    );
+
+                } else {
+
+                    await createNewUser();
+
+                }
+
+
+                // =========================
+                // CREATE NEW USER
+                // =========================
+
+                async function createNewUser() {
+
+                    try {
+
+                        const hashedPassword =
+                            await bcrypt.hash(password, 10);
+
+                        const insertSql = `
+                            INSERT INTO users
+                            (
+                                full_name,
+                                username,
+                                password,
+                                email,
+                                role,
+                                status,
+                                date_created
+                            )
+                            VALUES (?, ?, ?, ?, 'Staff', 'Active', CURDATE())
+                        `;
+
+                        db.query(
+                            insertSql,
+                            [
+                                full_name,
+                                username,
+                                hashedPassword,
+                                email || null
+                            ],
+                            (insertErr) => {
+
+                                if (insertErr) {
+
+                                    console.error(insertErr);
+
+                                    return res.status(500).json({
+                                        success: false,
+                                        message:
+                                            "Could not create account."
+                                    });
+                                }
+
+                                return res.status(201).json({
+                                    success: true,
+                                    message:
+                                        "Account created successfully!"
+                                });
+
+                            }
+                        );
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        return res.status(500).json({
+                            success: false,
+                            message: "Server error."
+                        });
+                    }
+                }
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error."
+        });
+
+    }
+
+});
+
+
+// =========================
+// SEND LOGIN VERIFICATION CODE(S)
+// =========================
+// Called when the user clicks "Send Verification Code" on the login
+// page. Looks up the account, generates an email verification code
+// (and an MFA code too, if the account's role requires it), stores
+// them for 5 minutes, and emails them.
+
+app.post("/api/login/send-code", (req, res) => {
+
+    const { username } = req.body;
+
+    if (!username) {
+
+        return res.status(400).json({
+            success: false,
+            message: "Username or email is required."
+        });
+    }
+
+    const sql = `
+        SELECT user_id, full_name, username, email, role, status
+        FROM users
+        WHERE username = ? OR email = ?
+        LIMIT 1
+    `;
+
+    db.query(sql, [username, username], async (err, results) => {
+
+        if (err) {
+
+            console.error(err);
+
+            return res.status(500).json({
+                success: false,
+                message: "Database error."
+            });
+        }
+
+        if (results.length === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "No account found with that username or email."
+            });
+        }
+
+        const user = results[0];
+
+        if (!user.email) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "This account has no email on file, so a code can't be sent."
+            });
+        }
+
+        const emailCode = generateSixDigitCode();
+
+        const needsMfa =
+            MFA_REQUIRED_ROLES.includes(user.role);
+
+        const mfaCode =
+            needsMfa ? generateSixDigitCode() : null;
+
+        loginCodeStore.set(user.user_id, {
+            emailCode,
+            mfaCode,
+            expiresAt: Date.now() + CODE_EXPIRY_MS
+        });
+
+        const bodyLines = [
+            `Hi ${user.full_name},`,
+            "",
+            `Your BRRMS email verification code is: ${emailCode}`
+        ];
+
+        if (needsMfa) {
+            bodyLines.push(
+                `Your BRRMS MFA code is: ${mfaCode}`
+            );
+        }
+
+        bodyLines.push(
+            "",
+            "These codes expire in 5 minutes. If you didn't request this, you can ignore this email."
+        );
+
+        const { sent } = await sendCodeEmail(
+            user.email,
+            "Your BRRMS login code",
+            bodyLines.join("\n")
+        );
+
+        // Dev convenience: always print codes to the server console
+        // too, in case email isn't configured yet.
+        console.log(
+            `[LOGIN CODE] ${user.username} -> email: ${emailCode}` +
+            (needsMfa ? `, mfa: ${mfaCode}` : "")
+        );
+
+        return res.json({
+            success: true,
+            message: sent
+                ? "Verification code sent to your email."
+                : "Email is not configured on this server yet — check the server console for your code."
+        });
+
+    });
+
+});
+
+
+// =========================
+// LOGIN
+// =========================
+
+app.post("/api/login", (req, res) => {
+
+    const {
+        username,
+        password,
+        emailVerificationCode,
+        mfaCode
+    } = req.body;
+
+    // -------------------------
+    // REQUIRED FIELDS
+    // -------------------------
+
+    if (!username || !password) {
+
+        return res.status(400).json({
+            success: false,
+            message:
+                "Username/Email and password are required."
+        });
+    }
+
+    if (!emailVerificationCode) {
+
+        return res.status(400).json({
+            success: false,
+            message:
+                "Email verification code is required."
+        });
+    }
+
+    // -------------------------
+    // FIND USER
+    // -------------------------
+
+    const sql = `
+        SELECT
+            user_id,
+            full_name,
+            username,
+            password,
+            email,
+            role,
+            status
+        FROM users
+        WHERE username = ? OR email = ?
+        LIMIT 1
+    `;
+
+    db.query(
+        sql,
+        [username, username],
+        async (err, results) => {
+
+            if (err) {
+
+                console.error(err);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Database error."
+                });
+            }
+
+            // -------------------------
+            // USER NOT FOUND
+            // -------------------------
+
+            if (results.length === 0) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Invalid username/email or password."
+                });
+            }
+
+            const user = results[0];
+
+            // -------------------------
+            // CHECK ACCOUNT STATUS
+            // -------------------------
+
+            if (user.status !== "Active") {
+
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "This account is inactive."
+                });
+            }
+
+            try {
+
+                // -------------------------
+                // CHECK PASSWORD
+                // -------------------------
+
+                const passwordMatch =
+                    await bcrypt.compare(
+                        password,
+                        user.password
+                    );
+
+                if (!passwordMatch) {
+
+                    return res.status(401).json({
+                        success: false,
+                        message:
+                            "Invalid username/email or password."
+                    });
+                }
+
+                // -------------------------
+                // CHECK VERIFICATION CODE(S)
+                // -------------------------
+
+                const stored =
+                    loginCodeStore.get(user.user_id);
+
+                if (!stored) {
+
+                    return res.status(400).json({
+                        success: false,
+                        message:
+                            "Please request a verification code first."
+                    });
+                }
+
+                if (Date.now() > stored.expiresAt) {
+
+                    loginCodeStore.delete(user.user_id);
+
+                    return res.status(400).json({
+                        success: false,
+                        message:
+                            "Your verification code expired. Please request a new one."
+                    });
+                }
+
+                if (emailVerificationCode !== stored.emailCode) {
+
+                    return res.status(401).json({
+                        success: false,
+                        message:
+                            "Incorrect email verification code."
+                    });
+                }
+
+                const needsMfa =
+                    MFA_REQUIRED_ROLES.includes(user.role);
+
+                if (needsMfa) {
+
+                    if (!mfaCode) {
+
+                        return res.status(400).json({
+                            success: false,
+                            message:
+                                "MFA code is required for this account."
+                        });
+                    }
+
+                    if (mfaCode !== stored.mfaCode) {
+
+                        return res.status(401).json({
+                            success: false,
+                            message:
+                                "Incorrect MFA code."
+                        });
+                    }
+
+                }
+
+                // Codes are one-time use
+                loginCodeStore.delete(user.user_id);
+
+                // -------------------------
+                // LOGIN SUCCESS
+                // -------------------------
+
+                console.log(
+                    `${user.username} logged in as ${user.role}`
                 );
 
-                signupMessage.textContent =
-                    "Cannot connect to the server. Make sure your BRRMS server is running.";
+                return res.json({
+                    success: true,
+                    message: "Login successful!",
 
-                signupMessage.className =
-                    "auth-message error";
+                    user: {
+                        user_id: user.user_id,
+                        full_name: user.full_name,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                        status: user.status
+                    }
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Login error."
+                });
 
             }
 
         }
+    );
+
+});
+
+
+// =========================
+// UPDATE PROFILE
+// =========================
+// Called from the dashboard's "Edit Profile" modal. Updates the real
+// row in the users table. Password is optional — send it only when
+// the user actually wants to change it.
+
+app.put("/api/users/:userId", async (req, res) => {
+
+    const { userId } = req.params;
+
+    const {
+        full_name,
+        email,
+        password
+    } = req.body;
+
+
+    // -------------------------
+    // REQUIRED FIELDS
+    // -------------------------
+
+    if (!full_name) {
+
+        return res.status(400).json({
+            success: false,
+            message: "Full name is required."
+        });
+    }
+
+
+    // -------------------------
+    // CHECK EMAIL UNIQUENESS
+    // (excluding this same user)
+    // -------------------------
+
+    try {
+
+        if (email) {
+
+            const emailCheckSql = `
+                SELECT user_id
+                FROM users
+                WHERE email = ? AND user_id != ?
+                LIMIT 1
+            `;
+
+            const emailTaken = await new Promise(function(resolve, reject) {
+
+                db.query(
+                    emailCheckSql,
+                    [email, userId],
+                    function(err, results) {
+
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(results.length > 0);
+                        }
+
+                    }
+                );
+
+            });
+
+            if (emailTaken) {
+
+                return res.status(409).json({
+                    success: false,
+                    message: "Email already in use by another account."
+                });
+            }
+
+        }
+
+
+        // -------------------------
+        // BUILD UPDATE QUERY
+        // -------------------------
+
+        const fields = ["full_name = ?", "email = ?"];
+        const values = [full_name, email || null];
+
+
+        if (password) {
+
+            const hashedPassword =
+                await bcrypt.hash(password, 10);
+
+            fields.push("password = ?");
+            values.push(hashedPassword);
+
+        }
+
+        values.push(userId);
+
+        const updateSql = `
+            UPDATE users
+            SET ${fields.join(", ")}
+            WHERE user_id = ?
+        `;
+
+        db.query(
+            updateSql,
+            values,
+            function(err) {
+
+                if (err) {
+
+                    console.error(err);
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Could not update profile."
+                    });
+                }
+
+
+                // Return the fresh record so the frontend can
+                // update localStorage / the header immediately.
+
+                const selectSql = `
+                    SELECT user_id, full_name, username, email, role, status
+                    FROM users
+                    WHERE user_id = ?
+                    LIMIT 1
+                `;
+
+                db.query(
+                    selectSql,
+                    [userId],
+                    function(selectErr, results) {
+
+                        if (selectErr || results.length === 0) {
+
+                            console.error(selectErr);
+
+                            return res.status(500).json({
+                                success: false,
+                                message: "Profile updated, but could not reload it."
+                            });
+                        }
+
+                        return res.json({
+                            success: true,
+                            message: "Profile updated successfully!",
+                            user: results[0]
+                        });
+
+                    }
+                );
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error."
+        });
+
+    }
+
+});
+
+
+// =========================
+// START SERVER
+// =========================
+
+app.listen(PORT, () => {
+
+    console.log(
+        `BRRMS SERVER STARTED on http://localhost:${PORT}`
     );
 
 });
