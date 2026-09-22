@@ -3293,6 +3293,12 @@ function toDateInputValue(displayDate) {
 }
 
 
+const certificateTable =
+    document.getElementById(
+        "certificateTable"
+    );
+
+
 function renderCertificatesTable() {
 
     certificateTable.innerHTML = "";
@@ -3826,11 +3832,6 @@ const addCertificateBtn =
 const closeCertificate =
     document.getElementById(
         "closeCertificate"
-    );
-
-const certificateTable =
-    document.getElementById(
-        "certificateTable"
     );
 
 
